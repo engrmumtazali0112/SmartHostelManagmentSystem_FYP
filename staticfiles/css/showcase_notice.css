@@ -1,0 +1,270 @@
+/* Base styles */
+:root {
+    --primary-color: #4a6fdc;
+    --primary-hover: #3d5cba;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --light-gray: #f8f9fa;
+    --medium-gray: #e9ecef;
+    --dark-gray: #343a40;
+    --border-color: #dee2e6;
+    --shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    --transition: all 0.2s ease-in-out;
+  }
+  
+  /* General container styling */
+  .create-notice-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+  }
+  
+  /* Back link styling */
+  .back-link {
+    margin-bottom: 1.5rem;
+  }
+  
+  .back-link a {
+    display: inline-flex;
+    align-items: center;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  .back-link a i {
+    margin-right: 0.5rem;
+  }
+  
+  .back-link a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+  }
+  
+  /* Card styling */
+  .create-notice-card {
+    background-color: white;
+    border-radius: 0.5rem;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  
+  .card-header {
+    background-color: white;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+  }
+  
+  .card-header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: var(--dark-gray);
+  }
+  
+  .card-body {
+    padding: 1.5rem;
+  }
+  
+  /* Form styling */
+  .create-notice-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+  
+  .form-group {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .form-group label {
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--dark-gray);
+  }
+  
+  .form-control, 
+  input[type="text"], 
+  input[type="file"], 
+  textarea, 
+  select {
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.25rem;
+    font-size: 1rem;
+    width: 100%;
+    transition: var(--transition);
+  }
+  
+  .form-control:focus, 
+  input[type="text"]:focus, 
+  textarea:focus, 
+  select:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(74, 111, 220, 0.25);
+  }
+  
+  textarea {
+    min-height: 150px;
+    resize: vertical;
+  }
+  
+  /* Error styling */
+  .form-errors, .field-errors {
+    color: var(--danger-color);
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+  }
+  
+  /* Current attachment styling */
+  .current-attachment {
+    background-color: var(--light-gray);
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .current-attachment a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 500;
+  }
+  
+  .current-attachment a:hover {
+    text-decoration: underline;
+  }
+  
+  .form-check {
+    display: flex;
+    align-items: center;
+    margin-top: 0.5rem;
+  }
+  
+  .form-check-input {
+    margin-right: 0.5rem;
+  }
+  
+  /* Button styling */
+  .form-actions {
+    display: flex;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .btn {
+    display: inline-block;
+    font-weight: 500;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: middle;
+    user-select: none;
+    border: 1px solid transparent;
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    transition: var(--transition);
+    cursor: pointer;
+  }
+  
+  .btn-primary {
+    color: white;
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+  
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+  
+  .btn-outline {
+    color: var(--dark-gray);
+    background-color: transparent;
+    border-color: var(--border-color);
+  }
+  
+  .btn-outline:hover {
+    color: var(--dark-gray);
+    background-color: var(--medium-gray);
+  }
+  
+  /* Responsive styles */
+  @media (max-width: 768px) {
+    .card-header {
+      padding: 1.25rem;
+    }
+    
+    .card-body {
+      padding: 1.25rem;
+    }
+    
+    .form-actions {
+      flex-direction: column;
+    }
+    
+    .btn {
+      width: 100%;
+    }
+  }
+  
+  @media (max-width: 576px) {
+    .create-notice-container {
+      padding: 1rem 0.5rem;
+    }
+    
+    .card-header {
+      padding: 1rem;
+    }
+    
+    .card-header h1 {
+      font-size: 1.25rem;
+    }
+    
+    .card-body {
+      padding: 1rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  /* Animation effects */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .create-notice-card {
+    animation: fadeIn 0.3s ease-out;
+  }
+  
+  /* Custom file input styling */
+  input[type="file"] {
+    padding: 0.5rem;
+  }
+  
+  input[type="file"]::file-selector-button {
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    background-color: var(--light-gray);
+    border: 1px solid var(--border-color);
+    color: var(--dark-gray);
+    cursor: pointer;
+    margin-right: 1rem;
+    transition: var(--transition);
+  }
+  
+  input[type="file"]::file-selector-button:hover {
+    background-color: var(--medium-gray);
+  }

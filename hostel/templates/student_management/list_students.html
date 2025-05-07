@@ -50,15 +50,25 @@
         transform: translateY(-1px);
     }
 
-    /* Search Bar */
-    .search-container {
+    /* Filter & Search Section */
+    .filters-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
         margin-bottom: 1.5rem;
+        padding: 1rem;
+        background-color: #f8fafc;
+        border-radius: 0.5rem;
+    }
+
+    .search-container {
+        flex: 1;
+        min-width: 300px;
     }
 
     .search-container form {
         display: flex;
         gap: 0.5rem;
-        max-width: 600px;
     }
 
     .search-input {
@@ -93,12 +103,60 @@
         transform: translateY(-1px);
     }
 
+    /* Filter Dropdowns */
+    .filter-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .filter-select {
+        padding: 0.625rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        background-color: white;
+        min-width: 140px;
+    }
+
+    .filter-select:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .filter-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #475569;
+    }
+
+    .reset-filters {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        background-color: #f1f5f9;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .reset-filters:hover {
+        background-color: #e2e8f0;
+    }
+
     /* Table Styles */
     .table-container {
         background: white;
         border-radius: 1rem;
         box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         overflow: hidden;
+        margin-bottom: 1.5rem;
     }
 
     .student-table {
@@ -117,6 +175,20 @@
         border-bottom: 2px solid #e2e8f0;
         position: sticky;
         top: 0;
+        cursor: pointer;
+    }
+
+    .student-table thead th:hover {
+        background: #f1f5f9;
+    }
+
+    .student-table thead th.active {
+        color: #2563eb;
+    }
+
+    .sort-icon {
+        margin-left: 0.25rem;
+        font-size: 0.75rem;
     }
 
     .student-table tbody td {
@@ -255,6 +327,10 @@
         background: #f1f5f9;
     }
 
+    .view-btn:hover {
+        color: #0ea5e9;
+    }
+
     .edit-btn:hover {
         color: #2563eb;
     }
@@ -280,6 +356,136 @@
         font-size: 0.875rem;
     }
 
+    /* Pagination */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 0;
+    }
+
+    .page-info {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 0.25rem;
+    }
+
+    .page-item {
+        display: inline-block;
+    }
+
+    .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 2rem;
+        height: 2rem;
+        padding: 0 0.5rem;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        color: #64748b;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+
+    .page-link:hover {
+        background: #f1f5f9;
+        color: #2563eb;
+    }
+
+    .page-item.active .page-link {
+        background: #2563eb;
+        color: white;
+    }
+
+    .page-item.disabled .page-link {
+        color: #cbd5e1;
+        pointer-events: none;
+    }
+
+    /* Quick Action Bar */
+    .quick-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .export-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.375rem;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s;
+        border: 1px solid #e2e8f0;
+    }
+
+    .export-btn:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    /* Status Summary Cards */
+    .status-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .status-card {
+        flex: 1;
+        min-width: 200px;
+        background: white;
+        border-radius: 0.75rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .status-card-title {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 500;
+    }
+
+    .status-card-value {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    .status-card-paid {
+        border-left: 4px solid #16a34a;
+    }
+
+    .status-card-unpaid {
+        border-left: 4px solid #dc2626;
+    }
+
+    .status-card-pending {
+        border-left: 4px solid #d97706;
+    }
+
+    .status-card-total {
+        border-left: 4px solid #2563eb;
+    }
+
     /* Responsive Design */
     @media (max-width: 1200px) {
         .container {
@@ -288,6 +494,10 @@
         
         .table-container {
             border-radius: 0.5rem;
+        }
+
+        .status-summary {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
@@ -305,13 +515,37 @@
         }
     }
 
-    @media (max-width: 640px) {
+    @media (max-width: 768px) {
         .page-header {
             flex-direction: column;
             gap: 1rem;
             align-items: flex-start;
         }
 
+        .filters-container {
+            flex-direction: column;
+        }
+
+        .filter-group {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .filter-select {
+            width: 100%;
+        }
+
+        .status-summary {
+            flex-direction: column;
+        }
+
+        .pagination-container {
+            flex-direction: column;
+            gap: 1rem;
+        }
+    }
+
+    @media (max-width: 640px) {
         .search-container form {
             flex-direction: column;
         }
@@ -319,9 +553,20 @@
         .search-btn {
             width: 100%;
         }
+
+        .quick-actions {
+            flex-direction: column;
+        }
+
+        .export-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
 </style>
 
+
+<!-- Container Styles -->
 <div class="container">
     <div class="page-header">
         <h1 class="page-title">Students</h1>
@@ -331,29 +576,112 @@
         </a>
     </div>
 
-    <div class="search-container">
-        <form method="GET" action="{% url 'list_students' %}">
-            <input type="text" name="search" class="search-input" 
-                   placeholder="Search by name, email, or registration number" 
-                   value="{{ search_query }}">
-            <button type="submit" class="search-btn">
-                <i class="fas fa-search"></i>
-                Search
-            </button>
-        </form>
+    <!-- Status Summary Cards -->
+    <div class="status-summary">
+        <div class="status-card status-card-total">
+            <div class="status-card-title">Total Students</div>
+            <div class="status-card-value">{{ total_students }}</div>
+        </div>
+        <div class="status-card status-card-paid">
+            <div class="status-card-title">Fully Paid</div>
+            <div class="status-card-value">{{ fully_paid_count }}</div>
+        </div>
+        <div class="status-card status-card-pending">
+            <div class="status-card-title">Partially Paid</div>
+            <div class="status-card-value">{{ partially_paid_count }}</div>
+        </div>
+        <div class="status-card status-card-unpaid">
+            <div class="status-card-title">Not Paid</div>
+            <div class="status-card-value">{{ not_paid_count }}</div>
+        </div>
+    </div>
+
+    <!-- Enhanced Filter & Search Section -->
+    <div class="filters-container">
+        <div class="search-container">
+            <form method="GET" action="{% url 'list_students' %}" id="search-form">
+                <input type="text" name="search" class="search-input" 
+                       placeholder="Search by name, email, or registration number" 
+                       value="{{ search_query }}">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                    Search
+                </button>
+            </form>
+        </div>
+        <div class="filter-group">
+            <label class="filter-label">Hostel:</label>
+            <select name="hostel" class="filter-select" form="search-form">
+                <option value="">All Hostels</option>
+                {% for hostel in hostels %}
+                <option value="{{ hostel.pk }}" {% if selected_hostel == hostel.pk %}selected{% endif %}>
+                    {{ hostel.Hostel_Name }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <label class="filter-label">Department:</label>
+            <select name="department" class="filter-select" form="search-form">
+                <option value="">All Departments</option>
+                {% for dept in departments %}
+                <option value="{{ dept }}" {% if selected_department == dept %}selected{% endif %}>
+                    {{ dept }}
+                </option>
+                {% endfor %}
+            </select>
+            
+            <label class="filter-label">Fee Status:</label>
+            <select name="fee_status" class="filter-select" form="search-form">
+                <option value="">All Status</option>
+                <option value="FULLY_PAID" {% if selected_fee_status == 'FULLY_PAID' %}selected{% endif %}>Paid</option>
+                <option value="PARTIALLY_PAID" {% if selected_fee_status == 'PARTIALLY_PAID' %}selected{% endif %}>Partially Paid</option>
+                <option value="NOT_PAID" {% if selected_fee_status == 'NOT_PAID' %}selected{% endif %}>Not Paid</option>
+            </select>
+            
+            {% if search_query or selected_hostel or selected_department or selected_fee_status %}
+            <a href="{% url 'list_students' %}" class="reset-filters">
+                <i class="fas fa-times"></i> Clear Filters
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Action Buttons -->
+    <div class="quick-actions">
+        <a href="{% url 'export_students_csv' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="export-btn">
+            <i class="fas fa-file-csv"></i> Export CSV
+        </a>
+        <a href="{% url 'export_students_pdf' %}{% if request.GET.urlencode %}?{{ request.GET.urlencode }}{% endif %}" class="export-btn">
+            <i class="fas fa-file-pdf"></i> Export PDF
+        </a>
+        <a href="{% url 'bulk_fee_reminder' %}" class="export-btn">
+            <i class="fas fa-bell"></i> Send Fee Reminders
+        </a>
     </div>
 
     <div class="table-container">
         <table class="student-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Student Details</th>
-                    <th>Email</th>
-                    <th>Department</th>
+                    <th data-sort="id" class="{% if sort_by == 'id' %}active{% endif %}">
+                        ID <i class="fas fa-sort{% if sort_by == 'id' %}-{{ sort_direction }}{% endif %} sort-icon"></i>
+                    </th>
+                    <th data-sort="name" class="{% if sort_by == 'name' %}active{% endif %}">
+                        Student Details <i class="fas fa-sort{% if sort_by == 'name' %}-{{ sort_direction }}{% endif %} sort-icon"></i>
+                    </th>
+                    <th data-sort="email" class="{% if sort_by == 'email' %}active{% endif %}">
+                        Email <i class="fas fa-sort{% if sort_by == 'email' %}-{{ sort_direction }}{% endif %} sort-icon"></i>
+                    </th>
+                    <th data-sort="department" class="{% if sort_by == 'department' %}active{% endif %}">
+                        Department <i class="fas fa-sort{% if sort_by == 'department' %}-{{ sort_direction }}{% endif %} sort-icon"></i>
+                    </th>
                     <th>Room</th>
-                    <th>Hostel</th>
-                    <th>Fee Status</th>
+                    <th data-sort="hostel" class="{% if sort_by == 'hostel' %}active{% endif %}">
+                        Hostel <i class="fas fa-sort{% if sort_by == 'hostel' %}-{{ sort_direction }}{% endif %} sort-icon"></i>
+                    </th>
+                    <th data-sort="fee_status" class="{% if sort_by == 'fee_status' %}active{% endif %}">
+                        Fee Status <i class="fas fa-sort{% if sort_by == 'fee_status' %}-{{ sort_direction }}{% endif %} sort-icon"></i>
+                    </th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -393,15 +721,16 @@
                                 {{ student.get_fee_status_display }}
                             </span>
                             <div class="fee-details">
+                                Room Fee: Rs{{ student.room_price }}<br>
                                 Total: Rs{{ student.total_fee }}<br>
-                                Paid: Rs{{ student.total_paid_amount|default:"0" }}
+                                Paid: Rs{{ student.total_paid_amount|default:"0" }}<br>
+                                Due: Rs{{ student.remaining_amount|default:"0" }}
                             </div>
                         </div>
                     </td>
                     <td>
                         <div class="action-buttons">
-                            <!-- Corrected View URL -->
-                            <a href="{% url 'view_student' student.Student_ID %}" class="action-btn edit-btn" title="View">
+                            <a href="{% url 'view_student' student.Student_ID %}" class="action-btn view-btn" title="View">
                                 <i class="fas fa-eye"></i>
                             </a>
                             <a href="{% url 'edit_student' student.Student_ID %}" class="action-btn edit-btn" title="Edit">
@@ -421,12 +750,111 @@
                 <tr>
                     <td colspan="8" class="empty-state">
                         <i class="fas fa-users"></i>
-                        <p>No students found</p>
+                        <p>No students found matching your criteria</p>
+                        {% if search_query or selected_hostel or selected_department or selected_fee_status %}
+                        <a href="{% url 'list_students' %}" class="reset-filters">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+
+    <!-- Pagination -->
+    {% if students.has_other_pages %}
+    <div class="pagination-container">
+        <div class="page-info">
+            Showing {{ students.start_index }} to {{ students.end_index }} of {{ students.paginator.count }} students
+        </div>
+        <ul class="pagination">
+            {% if students.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_hostel %}hostel={{ selected_hostel }}&{% endif %}{% if selected_department %}department={{ selected_department }}&{% endif %}{% if selected_fee_status %}fee_status={{ selected_fee_status }}&{% endif %}page=1" aria-label="First">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_hostel %}hostel={{ selected_hostel }}&{% endif %}{% if selected_department %}department={{ selected_department }}&{% endif %}{% if selected_fee_status %}fee_status={{ selected_fee_status }}&{% endif %}page={{ students.previous_page_number }}" aria-label="Previous">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-double-left"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-left"></i></span>
+            </li>
+            {% endif %}
+
+            {% for i in students.paginator.page_range %}
+                {% if students.number == i %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ i }}</span>
+                    </li>
+                {% elif i > students.number|add:'-3' and i < students.number|add:'3' %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_hostel %}hostel={{ selected_hostel }}&{% endif %}{% if selected_department %}department={{ selected_department }}&{% endif %}{% if selected_fee_status %}fee_status={{ selected_fee_status }}&{% endif %}page={{ i }}">{{ i }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if students.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_hostel %}hostel={{ selected_hostel }}&{% endif %}{% if selected_department %}department={{ selected_department }}&{% endif %}{% if selected_fee_status %}fee_status={{ selected_fee_status }}&{% endif %}page={{ students.next_page_number }}" aria-label="Next">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?{% if search_query %}search={{ search_query }}&{% endif %}{% if selected_hostel %}hostel={{ selected_hostel }}&{% endif %}{% if selected_department %}department={{ selected_department }}&{% endif %}{% if selected_fee_status %}fee_status={{ selected_fee_status }}&{% endif %}page={{ students.paginator.num_pages }}" aria-label="Last">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            {% else %}
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-right"></i></span>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link"><i class="fas fa-angle-double-right"></i></span>
+            </li>
+            {% endif %}
+        </ul>
+    </div>
+    {% endif %}
 </div>
+
+<script>
+    // Sorting functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const sortableColumns = document.querySelectorAll('th[data-sort]');
+        
+        sortableColumns.forEach(column => {
+            column.addEventListener('click', function() {
+                const sortBy = this.getAttribute('data-sort');
+                let direction = 'asc';
+                
+                // Check if this column is already sorted
+                if (this.classList.contains('active')) {
+                    // Toggle direction if already sorted
+                    direction = this.querySelector('.fa-sort-asc') ? 'desc' : 'asc';
+                }
+                
+                // Build the URL with current filters plus new sort parameters
+                const currentUrl = new URL(window.location.href);
+                const searchParams = currentUrl.searchParams;
+                
+                // Update or add sort parameters
+                searchParams.set('sort', sortBy);
+                searchParams.set('direction', direction);
+                
+                // Redirect to the new URL
+                window.location.href = currentUrl.pathname + '?' + searchParams.toString();
+            });
+        });
+    });
+</script>
+
 {% endblock %}

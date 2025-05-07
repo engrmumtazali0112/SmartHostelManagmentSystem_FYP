@@ -1,78 +1,440 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    /* Card Styling */
+    .card {
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
+    }
+
+    .card-header {
+        background-color: #007bff;
+        border-radius: 15px 15px 0 0;
+        font-size: 1.5rem;
+        padding: 15px 20px;
+    }
+
+    .card-header i {
+        margin-right: 10px;
+    }
+
+    /* Alert Styling */
+    .alert {
+        border-radius: 10px;
+        padding: 12px 20px;
+        font-size: 1rem;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
+    }
+
+    .alert-info {
+        background-color: #d1ecf1;
+        color: #0c5460;
+        border-color: #bee5eb;
+    }
+
+    .alert-warning {
+        background-color: #fff3cd;
+        color: #856404;
+        border-color: #ffeeba;
+    }
+
+    /* Button Styling */
+    .btn {
+        font-size: 1.1rem;
+        padding: 10px 20px;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        border: none;
+    }
+
+    .btn-secondary:hover {
+        background-color: #5a6268;
+    }
+
+    /* Form Container */
+    .form-container {
+        margin-top: 30px;
+    }
+
+    /* Form Input Styling */
+    .form-control {
+        border-radius: 10px;
+        font-size: 1rem;
+        padding: 12px 15px;
+        border: 1px solid #ced4da;
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+        transition: box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
+    }
+
+    /* Form Label Styling */
+    label {
+        font-weight: bold;
+        color: #495057;
+    }
+
+    /* Fingerprint Section */
+    .fingerprint-section {
+        margin-top: 20px;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 15px;
+        border: 1px solid #dee2e6;
+    }
+
+    .fingerprint-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 15px;
+    }
+
+    #fingerprint-display {
+        margin-top: 20px;
+        width: 200px;
+        height: 200px;
+        background-color: #f0f0f0;
+        border: 1px solid #ccc;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+
+    #fingerprint-display.scanned {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+
+    #fingerprint-status {
+        margin-top: 10px;
+        font-weight: bold;
+    }
+
+    /* Progress Steps */
+    .progress-steps {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 30px;
+    }
+
+    .step {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        position: relative;
+    }
+
+    .step:not(:last-child):after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: -15%;
+        width: 30%;
+        height: 2px;
+        background-color: #dee2e6;
+        transform: translateY(-50%);
+    }
+
+    .step-number {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background-color: #dee2e6;
+        color: #6c757d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-weight: bold;
+    }
+
+    .step.active .step-number {
+        background-color: #007bff;
+        color: white;
+    }
+
+    .step-title {
+        font-weight: bold;
+        color: #6c757d;
+    }
+
+    .step.active .step-title {
+        color: #007bff;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .form-group {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .col-md-9 {
+            width: 100%;
+        }
+
+        .col-md-3 {
+            width: 100%;
+        }
+
+        .progress-steps {
+            flex-direction: column;
+        }
+
+        .step:not(:last-child):after {
+            display: none;
+        }
+
+        .step {
+            margin-bottom: 15px;
+        }
+    }
+</style>
 
 <div class="container mt-4">
-    <div class="card shadow">
+    <div class="card shadow-lg border-0 rounded-3">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0"><i class="fas fa-utensils mr-2"></i>Apply for Mess Membership</h4>
         </div>
         <div class="card-body">
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    <div class="alert alert-{{ message.tags }} mb-3">
+                        <i class="fas fa-info-circle mr-2"></i>{{ message }}
+                    </div>
                 {% endfor %}
             {% endif %}
-            
-            <form method="post">
-                {% csrf_token %}
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">Student Name:</label>
-                    <div class="col-md-9">
-                        <input type="text" class="form-control" value="{{ request.user.student.F_Name }} {{ request.user.student.L_Name }}" readonly>
-                    </div>
+
+            <!-- Check if the student has an active mess membership -->
+            {% if mess_membership %}
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-check-circle me-2"></i>
+                    You already have a mess membership application.
+                </div>
+                <div class="alert alert-success mb-4">
+                    <i class="fas fa-thumbs-up me-2"></i>
+                    Your application has been approved and your membership is active!
                 </div>
                 
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">Registration Number:</label>
-                    <div class="col-md-9">
-                        <input type="text" class="form-control" value="{{ request.user.student.Registration_Number }}" readonly>
-                    </div>
+                {% if not fingerprint_enrolled %}
+                <div class="alert alert-warning mb-4">
+                    <i class="fas fa-fingerprint me-2"></i>
+                    You need to enroll your fingerprint to complete the process.
                 </div>
+                <a href="{% url 'enroll_fingerprint' %}" class="btn btn-primary btn-lg">Enroll Fingerprint</a>
+                {% else %}
+                <div class="alert alert-success mb-4">
+                    <i class="fas fa-fingerprint me-2"></i>
+                    Your fingerprint has been successfully enrolled!
+                </div>
+                {% endif %}
                 
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">Room Number:</label>
-                    <div class="col-md-9">
-                        <input type="text" class="form-control" value="{{ request.user.student.Room_ID.Room_No }}" readonly>
+                <a href="{% url 'mess_membership_status' %}" class="btn btn-primary btn-lg">View Membership Status</a>
+            {% else %}
+                <!-- Progress steps for application -->
+                <div class="progress-steps">
+                    <div class="step active">
+                        <div class="step-number">1</div>
+                        <div class="step-title">Fill Application</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-title">Enroll Fingerprint</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-title">Approval</div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-title">Attendance</div>
                     </div>
                 </div>
-                
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">Hostel:</label>
-                    <div class="col-md-9">
-                        <input type="text" class="form-control" value="{{ request.user.student.Hostel_ID.Hostel_Name }}" readonly>
+
+                <!-- Display the mess membership application form -->
+                <form method="post" class="form-container" id="mess-application-form">
+                    {% csrf_token %}
+                    
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">Student Name:</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" value="{{ request.user.student.F_Name }} {{ request.user.student.L_Name }}" readonly>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">Department:</label>
-                    <div class="col-md-9">
-                        <input type="text" name="department" class="form-control" required>
+                    
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">Registration Number:</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" value="{{ request.user.student.Registration_Number }}" readonly>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">Start Date:</label>
-                    <div class="col-md-9">
-                        <input type="date" name="start_date" class="form-control" required>
+                    
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">Room Number:</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" value="{{ request.user.student.Room_ID.Room_No }}" readonly>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="form-group row">
-                    <label class="col-md-3 col-form-label">End Date:</label>
-                    <div class="col-md-9">
-                        <input type="date" name="end_date" class="form-control" required>
+                    
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">Hostel:</label>
+                        <div class="col-md-9">
+                            <input type="text" class="form-control" value="{{ request.user.student.Hostel_ID.Hostel_Name }}" readonly>
+                        </div>
                     </div>
-                </div>
-                
-                <div class="form-group row">
-                    <div class="col-md-9 offset-md-3">
-                        <button type="submit" class="btn btn-primary">Submit Application</button>
+                    
+                    <!-- Department and Dates for Membership -->
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">Department:</label>
+                        <div class="col-md-9">
+                            <input type="text" name="department" class="form-control" required>
+                        </div>
                     </div>
-                </div>
-            </form>
+                    
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">Start Date:</label>
+                        <div class="col-md-9">
+                            <input type="date" name="start_date" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group row mb-3">
+                        <label class="col-md-3 col-form-label">End Date:</label>
+                        <div class="col-md-9">
+                            <input type="date" name="end_date" class="form-control" required>
+                        </div>
+                    </div>
+                    
+                    <!-- Fingerprint Enrollment Section -->
+                    <div class="fingerprint-section">
+                        <h5><i class="fas fa-fingerprint me-2"></i>Fingerprint Enrollment</h5>
+                        <p class="text-muted">Your fingerprint is required for mess attendance tracking. It will be enrolled during your application process.</p>
+                        
+                        <div class="fingerprint-container">
+                            <button type="button" class="btn btn-secondary" id="scan-fingerprint-btn">
+                                <i class="fas fa-fingerprint me-2"></i> Scan Fingerprint
+                            </button>
+                            <div id="fingerprint-display" class="mt-3">No Fingerprint Scanned</div>
+                            <div id="fingerprint-status" class="text-muted">Please scan your fingerprint</div>
+                            <input type="hidden" name="fingerprint_data" id="fingerprint-data">
+                        </div>
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <!-- Submit Button -->
+                    <div class="form-group row">
+                        <div class="col-md-9 offset-md-3">
+                            <button type="submit" class="btn btn-primary btn-lg" id="submit-application">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Application
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% endif %}
         </div>
     </div>
 </div>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fingerprintBtn = document.getElementById('scan-fingerprint-btn');
+        const fingerprintDisplay = document.getElementById('fingerprint-display');
+        const fingerprintStatus = document.getElementById('fingerprint-status');
+        const fingerprintData = document.getElementById('fingerprint-data');
+        const submitBtn = document.getElementById('submit-application');
+        
+        // Initially disable the submit button until fingerprint is scanned
+        if (submitBtn) {
+            submitBtn.disabled = true;
+        }
+        
+        if (fingerprintBtn) {
+            fingerprintBtn.addEventListener('click', function() {
+                // Show scanning in progress
+                fingerprintStatus.textContent = "Scanning fingerprint...";
+                fingerprintStatus.className = "text-primary fw-bold";
+                
+                // Simulate fingerprint scanning (in production, this would use a real fingerprint API)
+                setTimeout(function() {
+                    // Simulate a successful scan
+                    const scanSuccessful = true;
+                    
+                    if (scanSuccessful) {
+                        // Update the fingerprint display
+                        fingerprintDisplay.textContent = "Fingerprint Scanned";
+                        fingerprintDisplay.classList.add('scanned');
+                        
+                        // Set a fake fingerprint data value (in production, this would be real data)
+                        fingerprintData.value = "FINGERPRINT_TEMPLATE_DATA_" + Date.now();
+                        
+                        // Update status
+                        fingerprintStatus.textContent = "Fingerprint captured successfully!";
+                        fingerprintStatus.className = "text-success fw-bold";
+                        
+                        // Enable the submit button
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                        }
+                    } else {
+                        // Handle scan failure
+                        fingerprintStatus.textContent = "Scan failed. Please try again.";
+                        fingerprintStatus.className = "text-danger fw-bold";
+                    }
+                }, 2000); // Simulate 2 seconds of scanning
+            });
+        }
+        
+        // Date validation
+        const startDateInput = document.querySelector('input[name="start_date"]');
+        const endDateInput = document.querySelector('input[name="end_date"]');
+        
+        if (startDateInput && endDateInput) {
+            // Set minimum date for start date to today
+            const today = new Date();
+            const formattedDate = today.toISOString().split('T')[0];
+            startDateInput.min = formattedDate;
+            
+            // Update end date minimum when start date changes
+            startDateInput.addEventListener('change', function() {
+                endDateInput.min = startDateInput.value;
+                if (endDateInput.value && new Date(endDateInput.value) < new Date(startDateInput.value)) {
+                    endDateInput.value = startDateInput.value;
+                }
+            });
+        }
+    });
+</script>
 {% endblock %}

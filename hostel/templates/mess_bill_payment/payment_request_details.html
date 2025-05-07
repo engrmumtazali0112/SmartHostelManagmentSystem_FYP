@@ -1,0 +1,318 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Payment Request Details{% endblock %}
+{% load custom_filters %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        Payment Request Details
+                        <a href="{% url 'admin_payment_requests' %}" class="btn btn-secondary float-right">
+                            <i class="fas fa-arrow-left"></i> Back to Requests
+                        </a>
+                        {% if payment_request.status == 'PENDING' %}
+                        <a href="{% url 'process_payment_request' payment_request.id %}" class="btn btn-primary float-right mr-2">
+                            <i class="fas fa-check-circle"></i> Process Request
+                        </a>
+                        {% endif %}
+                    </h4>
+                </div>
+                
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Student and Payment Info Section -->
+                    <div class="row mb-4">
+                        <!-- Student Information -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="mb-0"><i class="fas fa-user"></i> Student Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <th width="40%">Name</th>
+                                                <td>{{ payment_request.student.F_Name }} {{ payment_request.student.L_Name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Registration Number</th>
+                                                <td>{{ payment_request.student.Registration_Number }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Hostel</th>
+                                                <td>{{ payment_request.student.Hostel_ID.Hostel_Name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Room Number</th>
+                                                <td>{{ payment_request.student.Room_ID.Room_No }}</td>
+                                            </tr>
+                                         
+                                            <tr>
+                                                <th>Attendance (Last 30 Days)</th>
+                                                <td>
+                                                    <span class="badge badge-{% if attendance_days >= 5 %}success{% else %}warning{% endif %}">
+                                                        {{ attendance_days }} days
+                                                    </span>
+                                                    {% if attendance_days < 5 %}
+                                                    <small class="text-danger d-block">
+                                                        ({{ 5|sub:attendance_days }} more days needed for payment eligibility)
+                                                    </small>
+                                                    {% endif %}
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Request Information -->
+                        <div class="col-md-6">
+                            <div class="card h-100">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="mb-0"><i class="fas fa-money-bill-wave"></i> Payment Request Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <th width="40%">Request ID</th>
+                                                <td>{{ payment_request.id }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Amount</th>
+                                                <td>Rs. {{ payment_request.amount|floatformat:2 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Request Date</th>
+                                                <td>{{ payment_request.request_date|date:"d M Y, h:i A" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Payment Method</th>
+                                                <td>{{ payment_request.get_payment_method_display }}</td>
+                                            </tr>
+                                            
+                                            
+                                            <tr>
+                                                <th>Transaction ID</th>
+                                                <td>{{ payment_request.transaction_id|default:"Not provided" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Status</th>
+                                                <td>
+                                                    <span class="badge
+                                                        {% if payment_request.status == 'PENDING' %}badge-warning
+                                                        {% elif payment_request.status == 'APPROVED' %}badge-success
+                                                        {% elif payment_request.status == 'REJECTED' %}badge-danger
+                                                        {% else %}badge-secondary{% endif %}
+                                                        {% if payment_request.status == 'APPROVED' %} text-white{% endif %}
+                                                        " 
+                                                        style="{% if payment_request.status == 'APPROVED' %}background-color: #5ACD84;{% endif %}">
+                                                        {{ payment_request.get_status_display }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            
+                                            {% if payment_request.status != 'PENDING' %}
+                                            <tr>
+                                                <th>Processed Date</th>
+                                                <td>{{ payment_request.processed_date|date:"d M Y, h:i A" }}</td>
+                                            </tr>
+                                            {% if payment_request.admin_note %}
+                                            <tr>
+                                                <th>Admin Notes</th>
+                                                <td>{{ payment_request.admin_note }}</td>
+                                            </tr>
+                                            {% endif %}
+                                            {% endif %}
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Proof and Associated Bills -->
+                    <div class="row mb-4">
+                        <!-- Payment Proof -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h5 class="mb-0"><i class="fas fa-file-image"></i> Payment Proof</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    {% if payment_request.payment_screenshot %}
+                                    <img src="{{ payment_request.payment_screenshot.url }}" class="img-fluid img-thumbnail" style="max-height: 300px;" alt="Payment Screenshot">
+                                    <div class="mt-2">
+                                        <a href="{{ payment_request.payment_screenshot.url }}" class="btn btn-sm btn-info" target="_blank">
+                                            <i class="fas fa-search-plus"></i> View Full Size
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> No payment screenshot provided.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Associated Bills -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar"></i> Associated Bills</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if payment_request.bills.all %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Bill ID</th>
+                                                    <th>Month</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for bill in payment_request.bills.all %}
+                                                <tr>
+                                                    <td>{{ bill.id }}</td>
+                                                    <td>{{ bill.bill_month }} {{ bill.bill_year }}</td>
+                                                    <td>Rs. {{ bill.total_amount|floatformat:2 }}</td>
+                                                    <td>
+                                                        {% if bill.paid_status %}
+                                                        <span class="badge badge-success">Paid</span>
+                                                        {% else %}
+                                                        <span class="badge badge-danger">Unpaid</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr class="bg-light">
+                                                    <th colspan="2">Total</th>
+                                                    <th>Rs. {{ payment_request.bills.all|bill_total_amount|floatformat:2 }}</th>
+                                                    <th></th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> No bills associated with this payment request.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Meal Attendance Detail -->
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header bg-dark text-white">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-utensils"></i> Meal Attendance Details
+                                        <small class="text-light ml-2">(Last 30 Days)</small>
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if meal_details %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped" id="meal-details-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Date</th>
+                                                    <th>Meal</th>
+                                                    <th>Price</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for meal in meal_details %}
+                                                <tr>
+                                                    <td>{{ meal.date|date:"d M Y" }}</td>
+                                                    <td>{{ meal.meal_time }}</td>
+                                                    <td>Rs. {{ meal.price|floatformat:2 }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                            <tfoot>
+                                                <tr class="bg-light">
+                                                    <th colspan="2">Total</th>
+                                                    <th>Rs. {{ meal_details|meal_price_total|floatformat:2 }}</th>
+                                                </tr>
+                                            </tfoot>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-info-circle"></i> No meal attendance records found for the last 30 days.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'admin_payment_requests' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Requests
+                        </a>
+                        {% if payment_request.status == 'PENDING' %}
+                        <a href="{% url 'process_payment_request' payment_request.id %}" class="btn btn-primary">
+                            <i class="fas fa-check-circle"></i> Process Request
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('#meal-details-table').DataTable({
+            "order": [[0, "desc"]],
+            "pageLength": 10,
+            "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            "language": {
+                "lengthMenu": "Show _MENU_ entries",
+                "zeroRecords": "No matching records found",
+                "info": "Showing _START_ to _END_ of _TOTAL_ entries",
+                "infoEmpty": "Showing 0 to 0 of 0 entries",
+                "infoFiltered": "(filtered from _MAX_ total entries)",
+                "search": "Search:",
+                "paginate": {
+                    "first": "First",
+                    "last": "Last",
+                    "next": "Next",
+                    "previous": "Previous"
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
+{% endblock %}

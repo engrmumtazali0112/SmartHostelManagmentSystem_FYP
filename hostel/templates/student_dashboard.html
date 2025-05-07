@@ -1,73 +1,74 @@
 {% extends 'base.html' %}
-
+{% load static %}
 {% block title %}Student Dashboard{% endblock %}
 
 {% block content %}
-{% load static %}
-<div class="min-h-screen bg-gray-50">
-
-    <!-- Main Content -->
-    <div class="p-6">
-
-        <!-- Welcome Section with Gradient Color -->
-        <div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-500 text-white rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 mb-8 hover:shadow-2xl duration-300">
-            <div class="flex items-center mb-4">
-                <div class="w-16 h-16 rounded-full overflow-hidden mr-4">
-                    {% if student.profile_picture %}
-                        <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="w-full h-full object-cover">
-                    {% else %}
-                        <img src="{% static 'default-avatar.png' %}" alt="Default Profile" class="w-full h-full object-cover">
-                    {% endif %}
-                </div>
-                <div>
-                    <h1 class="text-2xl font-bold transition-all duration-300 transform hover:text-yellow-300">Welcome, {{ student.F_Name }} {{ student.L_Name }}!</h1>
-                    <div class="text-gray-200 mt-2">
-                        <i class="far fa-calendar mr-2"></i>
-                        <span id="current-date"></span>
-                    </div>
-                </div>
+<!-- Welcome Section with Gradient Color -->
+<div class="bg-gradient-to-r from-blue-500 via-blue-600 to-indigo-500 text-white rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 mb-8 hover:shadow-2xl duration-300">
+    <div class="flex items-center mb-4">
+        <div class="w-16 h-16 rounded-full overflow-hidden mr-4">
+            {% if student.profile_picture %}
+                <img src="{{ student.profile_picture.url }}" alt="Profile Picture" class="w-full h-full object-cover">
+            {% else %}
+                <img src="{% static 'default-avatar.png' %}" alt="Default Profile" class="w-full h-full object-cover">
+            {% endif %}
+        </div>
+        <div>
+            <h1 class="text-2xl font-bold transition-all duration-300 transform hover:text-yellow-300">Welcome, {{ student.F_Name }} {{ student.L_Name }}!</h1>
+            <div class="text-gray-200 mt-2">
+                <i class="far fa-calendar mr-2"></i>
+                <span id="current-date"></span>
             </div>
         </div>
+    </div>
+</div>
 
-        <!-- Quick Stats with different colors -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<!-- Quick Stats with different colors -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 
-            <!-- Room Info with Green Background -->
-            <div class="bg-green-100 text-green-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
-                <div class="flex items-center mb-4">
-                    <i class="fas fa-door-open text-green-600 mr-3"></i>
-                    <h3 class="font-bold text-lg">Room Information</h3>
-                </div>
-                <div class="space-y-3">
-                    <p>Room: {{ room.Room_No }}</p>
-                    <p>Hostel: {{ hostel.Hostel_Name }}</p>
-                    <p>Type: {{ room.Room_Type }}</p>
-                </div>
+   
+    <!-- Room Info with Green Background -->
+    <a href="{% url 'std_profile' %}" class="block">
+        <div class="bg-green-100 text-green-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
+            <div class="flex items-center mb-4">
+                <i class="fas fa-door-open text-green-600 mr-3"></i>
+                <h3 class="font-bold text-lg">Room Information</h3>
             </div>
-
-            <!-- Fee Status with Blue Background -->
-            <div class="bg-blue-100 text-blue-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
-                <div class="flex items-center mb-4">
-                    <i class="fas fa-money-bill-wave text-blue-600 mr-3"></i>
-                    <h3 class="font-bold text-lg">Fee Status</h3>
-                </div>
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <span class="bg-blue-200 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">Payment Progress</span>
-                        <span class="text-blue-600 font-medium">{{ fee_status.percentage }}%</span>
-                    </div>
-                    <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-                        <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width:{{ fee_status.percentage }}%"></div>
-                    </div>
-                    <div class="space-y-2">
-                        <p>Paid: Rs{{ fee_status.paid|floatformat:2 }}</p>
-                        <p>Remaining: Rs{{ fee_status.remaining|floatformat:2 }}</p>
-                    </div>
-                </div>
+            <div class="space-y-3">
+                <p>Room: {{ room.Room_No }}</p>
+                <p>Hostel: {{ hostel.Hostel_Name }}</p>
+                <p>Type: {{ room.Room_Type }}</p>
             </div>
+        </div>
+    </a>
 
-        <!-- Notifications with Yellow Background -->
-        <div class="bg-yellow-100 text-yellow-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
+
+    <!-- Fee Status with Blue Background -->
+    <a href="{% url 'account_book' %}" class="block">
+        <div class="bg-blue-100 text-blue-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
+        <div class="flex items-center mb-4">
+            <i class="fas fa-money-bill-wave text-blue-600 mr-3"></i>
+            <h3 class="font-bold text-lg">Hostel Fee Status</h3>
+        </div>
+        <div>
+            <div class="flex justify-between items-center mb-2">
+                <span class="bg-blue-200 text-blue-600 px-3 py-1 rounded-full text-sm font-medium">Payment Progress</span>
+                <span class="text-blue-600 font-medium">{{ fee_status.percentage }}%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-300" style="width:{{ fee_status.percentage }}%"></div>
+            </div>
+            <div class="space-y-2">
+                <p>Paid: Rs{{ fee_status.paid|floatformat:2 }}</p>
+                <p>Remaining: Rs{{ fee_status.remaining|floatformat:2 }}</p>
+            </div>
+        </div>
+        </div>
+    </a>
+
+    <!-- Notifications with Yellow Background -->
+    <a href="{% url 'student_showcase_notices' %}" class="block">
+    <div class="bg-yellow-100 text-yellow-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
             <div class="flex items-center mb-4">
                 <i class="fas fa-bell text-yellow-600 mr-3"></i>
                 <h3 class="font-bold text-lg">Showcase Notices</h3>
@@ -94,51 +95,159 @@
             {% else %}
                 <p class="text-gray-600">No active notices</p>
             {% endif %}
-        </div>
-
-        </div>
-
-        <!-- Recent Notices Section (Optional) -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-            <!-- Recent Notices with Purple Background -->
-            <div class="bg-purple-100 text-purple-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
-                <div class="flex items-center mb-6">
-                    <i class="fas fa-bullhorn text-purple-600 mr-3"></i>
-                    <h3 class="font-bold text-lg">Recent Notices</h3>
-                </div>
-                {% if unread_showcase_notices_count > 0 %}
-                <span class="ml-2 text-white bg-red-600 py-1 px-3 rounded-full text-sm">{{ unread_showcase_notices_count }}</span>
-            {% endif %}
-                {% if recent_notices %}
-                    <div class="space-y-6">
-                        {% for notice in recent_notices %}
-                            <div class="{% if not forloop.last %}border-b border-gray-200 pb-6{% endif %}">
-                                <h4 class="font-semibold text-gray-800 mb-2">{{ notice.Title }}</h4>
-                                <p class="text-gray-600 text-sm mb-2">{{ notice.Content|truncatewords:30 }}</p>
-                                <div class="flex items-center text-gray-500 text-sm">
-                                    <i class="far fa-clock mr-2"></i>
-                                    <span>Posted: {{ notice.Created_At|date:"M d, Y" }}</span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    <div class="mt-6">
-                        <a href="{% url 'student_notices' %}" class="text-purple-600 hover:text-purple-700 flex items-center transition-all duration-300 transform hover:scale-105">
-                            <span>View All Notices</span>
-                            <i class="fas fa-arrow-right ml-2"></i>
-                        </a>
-                    </div>
-                {% else %}
-                    <p class="text-gray-600">No recent notices</p>
-                {% endif %}
-            </div>
-
-        </div>
     </div>
-    
+    </a>
 </div>
 
+<!-- Second Row with Mess Menu and Mess Fee Status -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+    <!-- Today's Mess Menu with Orange Background -->
+    <div class="bg-orange-100 text-orange-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center">
+                <i class="fas fa-utensils text-orange-600 text-2xl mr-3"></i>
+                <h3 class="font-bold text-lg">Today's Mess Menu</h3>
+            </div>
+            <a href="{% url 'view_mess_menu' %}" class="bg-orange-500 text-white hover:bg-orange-600 px-3 py-1 rounded-lg text-sm transition-all duration-300">
+                <i class="fas fa-calendar-week mr-1"></i> Full Menu
+            </a>
+        </div>
+        
+        {% if today_menu %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- Breakfast -->
+                <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-coffee text-orange-500 mr-2"></i>
+                        <h4 class="font-medium">Breakfast</h4>
+                    </div>
+                    {% if today_menu.BF %}
+                        <p class="text-gray-700">{{ today_menu.BF.description }}</p>
+                    {% else %}
+                        <p class="text-gray-500 italic">Menu not available</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Lunch -->
+                <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-hamburger text-orange-500 mr-2"></i>
+                        <h4 class="font-medium">Lunch</h4>
+                    </div>
+                    {% if today_menu.LN %}
+                        <p class="text-gray-700">{{ today_menu.LN.description }}</p>
+                    {% else %}
+                        <p class="text-gray-500 italic">Menu not available</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Evening Tea -->
+                <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-cookie text-orange-500 mr-2"></i>
+                        <h4 class="font-medium">Evening Tea</h4>
+                    </div>
+                    {% if today_menu.ET %}
+                        <p class="text-gray-700">{{ today_menu.ET.description }}</p>
+                    {% else %}
+                        <p class="text-gray-500 italic">Menu not available</p>
+                    {% endif %}
+                </div>
+                
+                <!-- Dinner -->
+                <div class="bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex items-center mb-2">
+                        <i class="fas fa-drumstick-bite text-orange-500 mr-2"></i>
+                        <h4 class="font-medium">Dinner</h4>
+                    </div>
+                    {% if today_menu.DN %}
+                        <p class="text-gray-700">{{ today_menu.DN.description }}</p>
+                    {% else %}
+                        <p class="text-gray-500 italic">Menu not available</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center py-6">
+                <p class="text-gray-600">Today's menu is not available.</p>
+            </div>
+        {% endif %}
+    </div>
+  
+    <!-- Mess Fee Status Section with Detailed Breakdown -->
+    <div class="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white rounded-xl shadow-lg transform transition-all hover:scale-105 p-6 hover:shadow-2xl duration-300">
+        <div class="flex items-center mb-4">
+            <i class="fas fa-utensils text-white text-2xl mr-3"></i>
+            <h3 class="font-bold text-xl">Mess Fee Status</h3>
+        </div>
+        
+      
+        
+        <!-- Amount Details -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p class="text-sm text-gray-100">Total Mess Cost</p>
+                <p class="text-xl font-bold">Rs {{ mess_fee_status.total_cost|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p class="text-sm text-gray-100">Total Paid</p>
+                <p class="text-xl font-bold">Rs {{ mess_fee_status.total_paid|floatformat:2 }}</p>
+            </div>
+            <div class="bg-white bg-opacity-20 rounded-lg p-4 text-center">
+                <p class="text-sm text-gray-100">Remaining Due</p>
+                <p class="text-xl font-bold">Rs {{ mess_fee_status.remaining_due|floatformat:2 }}</p>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="flex justify-between items-center">
+            <a href="{% url 'mess_bill' %}" class="bg-white text-indigo-600 hover:bg-indigo-100 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 inline-flex items-center">
+                <i class="fas fa-receipt mr-2"></i>
+                View Detailed Bill
+            </a>
+            <a href="{% url 'payment_request_form' %}" class="bg-white text-indigo-600 hover:bg-indigo-100 px-4 py-2 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 inline-flex items-center">
+                <i class="fas fa-money-bill-wave mr-2"></i>
+                Make Payment
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Notices Section - Compact Design -->
+<div class="bg-purple-100 text-purple-800 rounded-xl shadow-lg transform transition-all hover:scale-105 p-5 hover:shadow-2xl duration-300">
+    <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center">
+            <i class="fas fa-bullhorn text-purple-600 mr-2"></i>
+            <h3 class="font-bold text-lg">Recent Notices</h3>
+            {% if unread_showcase_notices_count > 0 %}
+                <span class="ml-2 text-white bg-red-600 py-0.5 px-2 rounded-full text-xs">{{ unread_showcase_notices_count }}</span>
+            {% endif %}
+        </div>
+        <a href="{% url 'student_notices' %}" class="text-purple-600 hover:text-purple-700 flex items-center text-sm">
+            <span>View All</span>
+            <i class="fas fa-arrow-right ml-1 text-xs"></i>
+        </a>
+    </div>
+    
+    {% if recent_notices %}
+        <div class="grid grid-cols-1 gap-2">
+            {% for notice in recent_notices %}
+                <div class="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all duration-300">
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-semibold text-gray-800 text-sm">{{ notice.Title }}</h4>
+                        <span class="text-xs text-gray-500 whitespace-nowrap ml-2">{{ notice.Created_At|date:"M d" }}</span>
+                    </div>
+                    <p class="text-gray-600 text-xs mt-1">{{ notice.Content|truncatewords:12 }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="bg-white rounded-lg p-3 text-center">
+            <p class="text-gray-600 text-sm">No recent notices</p>
+        </div>
+    {% endif %}
+</div>
+</div>
 <script>
     document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
         weekday: 'long',

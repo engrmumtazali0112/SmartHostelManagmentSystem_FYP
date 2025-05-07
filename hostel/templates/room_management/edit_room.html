@@ -22,10 +22,16 @@
                 <div class="form-group">
                     <label class="form-label">Room Type</label>
                     <select class="form-control" name="room_type" required>
-                        <option value="Single" {% if room.Room_Type == 'Single' %}selected{% endif %}>Single</option>
-                        <option value="Double" {% if room.Room_Type == 'Double' %}selected{% endif %}>Double</option>
-                        <option value="Triple" {% if room.Room_Type == 'Triple' %}selected{% endif %}>Triple</option>
-                        <option value="Quad" {% if room.Room_Type == 'Quad' %}selected{% endif %}>Quad</option>
+                        <option value="One Seater" {% if room.Room_Type == 'One Seater' %}selected{% endif %}>One Seater</option>
+                        <option value="Two Seater" {% if room.Room_Type == 'Two Seater' %}selected{% endif %}>Two Seater</option>
+                        <option value="Three Seater" {% if room.Room_Type == 'Three Seater' %}selected{% endif %}>Three Seater</option>
+                        <option value="Four Seater" {% if room.Room_Type == 'Four Seater' %}selected{% endif %}>Four Seater</option>
+                        <option value="Five Seater" {% if room.Room_Type == 'Five Seater' %}selected{% endif %}>Five Seater</option>
+                        <option value="Six Seater" {% if room.Room_Type == 'Six Seater' %}selected{% endif %}>Six Seater</option>
+                        <option value="Seven Seater" {% if room.Room_Type == 'Seven Seater' %}selected{% endif %}>Seven Seater</option>
+                        <option value="Eight Seater" {% if room.Room_Type == 'Eight Seater' %}selected{% endif %}>Eight Seater</option>
+                        <option value="Nine Seater" {% if room.Room_Type == 'Nine Seater' %}selected{% endif %}>Nine Seater</option>
+                        <option value="Ten Seater" {% if room.Room_Type == 'Ten Seater' %}selected{% endif %}>Ten Seater</option>
                     </select>
                 </div>
             </div>
@@ -63,221 +69,108 @@
 </div>
 
 <style>
-    :root {
-        --primary-color: #3498db;
-        --primary-dark: #2980b9;
-        --secondary-color: #2c3e50;
-        --success-color: #2ecc71;
-        --danger-color: #e74c3c;
-        --warning-color: #f39c12;
-        --text-color: #34495e;
-        --light-gray: #f8f9fa;
-        --border-color: #e0e0e0;
-        --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
-    }
-
     .container {
-        max-width: 1200px;
+        max-width: 900px;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 8px;
     }
 
-    /* Form Container Styles */
     .form-container {
-        max-width: 800px;
-        width: 100%;
-        background: white;
-        padding: 2rem;
-        border-radius: 10px;
-        box-shadow: var(--box-shadow);
-        margin: 1rem auto;
-        transition: transform 0.3s ease;
-    }
-
-    .form-container:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        background-color: #ffffff;
+        padding: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
     .form-header {
-        margin-bottom: 2rem;
-        border-bottom: 2px solid var(--light-gray);
-        padding-bottom: 1rem;
+        text-align: center;
+        margin-bottom: 20px;
     }
 
     .form-title {
-        font-size: 1.75rem;
-        color: var(--text-color);
-        font-weight: 600;
-        margin-bottom: 0.5rem;
+        font-size: 2em;
+        color: #333;
+        margin-bottom: 10px;
     }
 
     .form-subtitle {
-        color: #6b7280;
-        font-size: 0.95rem;
+        font-size: 1.1em;
+        color: #777;
     }
 
-    /* Form Group Styles */
+    .form-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+
     .form-group {
-        margin-bottom: 1.5rem;
+        flex: 1;
+        margin-right: 20px;
+    }
+
+    .form-group:last-child {
+        margin-right: 0;
     }
 
     .form-label {
         display: block;
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: var(--text-color);
-        margin-bottom: 0.5rem;
+        font-size: 1em;
+        color: #333;
+        margin-bottom: 5px;
     }
 
     .form-control {
         width: 100%;
-        padding: 0.75rem 1rem;
-        font-size: 1rem;
-        color: var(--text-color);
-        background-color: var(--light-gray);
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        transition: all 0.3s ease;
+        padding: 10px;
+        font-size: 1em;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        transition: border-color 0.3s ease;
     }
 
     .form-control:focus {
-        background-color: #fff;
-        border-color: var(--primary-color);
+        border-color: #007bff;
         outline: none;
-        box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
     }
 
-    /* Form Grid */
-    .form-row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 0.5rem;
-    }
-
-    /* Select Styles */
-    select.form-control {
-        appearance: none;
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
-        background-position: right 0.75rem center;
-        background-repeat: no-repeat;
-        background-size: 1.25em 1.25em;
-        padding-right: 2.5rem;
-    }
-
-    /* Button Styles */
     .form-actions {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1.5rem;
+        text-align: center;
+        margin-top: 30px;
     }
 
     .form-button {
-        flex: 1;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0.75rem 1.5rem;
-        font-size: 1rem;
-        font-weight: 500;
-        border-radius: 8px;
-        border: none;
-        cursor: pointer;
-        transition: all 0.3s ease;
+        padding: 10px 20px;
+        font-size: 1.1em;
+        border-radius: 5px;
         text-decoration: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+        display: inline-block;
+        margin: 5px;
     }
 
     .btn-primary {
-        background: var(--primary-color);
+        background-color: #007bff;
         color: white;
+        border: none;
     }
 
     .btn-primary:hover {
-        background: var(--primary-dark);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(41, 128, 185, 0.3);
+        background-color: #0056b3;
     }
 
     .btn-secondary {
-        background: #95a5a6;
+        background-color: #6c757d;
         color: white;
+        border: none;
     }
 
     .btn-secondary:hover {
-        background: #7f8c8d;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(127, 140, 141, 0.3);
-    }
-
-    /* Alert Styles */
-    .alert {
-        padding: 1rem;
-        border-radius: 8px;
-        margin-bottom: 1.5rem;
-        border-left: 4px solid;
-    }
-
-    .alert-warning {
-        background-color: #fff8e1;
-        border-left-color: var(--warning-color);
-        color: #bf8f00;
-    }
-
-    .alert-danger {
-        background-color: #fdecea;
-        border-left-color: var(--danger-color);
-        color: #c0392b;
-    }
-
-    /* Input States */
-    .form-control:disabled {
-        background-color: #ecf0f1;
-        cursor: not-allowed;
-        opacity: 0.7;
-    }
-
-    .form-control.is-invalid {
-        border-color: var(--danger-color);
-        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23e74c3c' viewBox='0 0 12 12'%3e%3ccircle cx='6' cy='6' r='4.5'/%3e%3cpath stroke-linejoin='round' d='M5.8 3.6h.4L6 6.5z'/%3e%3ccircle cx='6' cy='8.2' r='.6' fill='%23e74c3c' stroke='none'/%3e%3c/svg%3e");
-        background-repeat: no-repeat;
-        background-position: right 0.75rem center;
-        background-size: 1rem 1rem;
-        padding-right: 2.5rem;
-    }
-
-    .invalid-feedback {
-        display: block;
-        font-size: 0.875rem;
-        color: var(--danger-color);
-        margin-top: 0.25rem;
-    }
-
-    /* Responsive Design */
-    @media (max-width: 768px) {
-        .form-row {
-            grid-template-columns: 1fr;
-            gap: 0;
-        }
-        
-        .form-container {
-            padding: 1.5rem;
-            margin: 1rem;
-        }
-        
-        .form-actions {
-            flex-direction: column;
-        }
-    }
-
-    /* Add subtle animations */
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-
-    .form-container {
-        animation: fadeIn 0.5s ease-out;
+        background-color: #5a6268;
     }
 </style>
+
 {% endblock %}

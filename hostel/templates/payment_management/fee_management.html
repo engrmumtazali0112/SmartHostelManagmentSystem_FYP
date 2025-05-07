@@ -326,10 +326,7 @@
         <div class="card-header">
             <div class="page-header">
                 <h2 class="page-title">Student Fee Management</h2>
-                <a href="{% url 'add_payment' %}" class="add-payment-btn">
-                    <i class="fas fa-plus"></i>
-                    Add Payment
-                </a>
+               
             </div>
         </div>
       
@@ -370,14 +367,14 @@
                             <td>{{ student.Hostel_ID.Hostel_Name }}</td>
                             <td>
                                 <div class="status-wrapper">
-                                    <span class="status-badge {% if student.fee_status == 'Paid' %}status-paid{% elif student.fee_status == 'Unpaid' %}status-unpaid{% else %}status-pending{% endif %}">
-                                        {{ student.fee_status }}
+                                    <span class="status-badge {% if student.fee_status == 'FULLY_PAID' %}status-paid{% elif student.fee_status == 'PARTIALLY_PAID' %}status-pending{% else %}status-unpaid{% endif %}">
+                                        {{ student.fee_status_display }}
                                     </span>
-                                    {% for payment in student.payments.all %}
+                                    {% if student.paid_installments > 0 %}
                                         <span class="status-badge status-paid">
-                                            Paid {{ forloop.counter }}
+                                            Paid {{ student.paid_installments }}/8
                                         </span>
-                                    {% endfor %}
+                                    {% endif %}
                                 </div>
                             </td>
                             <td>
@@ -398,7 +395,6 @@
                     </tbody>
                 </table>
             </div>
-        <!-- </div> -->
     </div>
 </div>
 {% endblock %}

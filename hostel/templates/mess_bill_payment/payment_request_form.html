@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% load filters %}
+<style>
+    .pulse-icon {
+        animation: pulse 1.5s infinite;
+    }
+    
+    .custom-alert {
+        border-radius: 10px;
+        animation: fadeIn 0.5s ease-in-out;
+    }
+
+    .card-visible {
+        opacity: 1;
+        transform: translateY(0);
+        transition: all 0.5s ease-in-out;
+    }
+
+    .card {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    .btn-animated {
+        transition: all 0.3s ease;
+    }
+
+    .btn-animated:hover {
+        transform: translateY(-3px);
+    }
+
+    .shake-animation {
+        animation: shake 0.5s ease-in-out;
+    }
+
+    @keyframes shake {
+        0% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        50% { transform: translateX(5px); }
+        75% { transform: translateX(-5px); }
+        100% { transform: translateX(0); }
+    }
+
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); }
+    }
+
+    .custom-file-input {
+        transition: background-color 0.3s ease;
+    }
+
+    .file-selected {
+        background-color: #e0ffe0;
+    }
+</style>
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow mb-4 main-card">
+        <div class="card-header bg-gradient-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-money-check-alt mr-2 pulse-icon"></i> Submit Payment Request
+                <a href="{% url 'mess_bill' %}" class="btn btn-light btn-sm float-right btn-animated">
+                    <i class="fas fa-arrow-left mr-1"></i> Back to Mess Bill
+                </a>
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Eligibility Status Card -->
+            <div class="card mb-4 status-card shadow-sm rounded-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-tasks mr-2"></i> Eligibility Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span>Attendance Days (Last 30 Days):</span>
+                        <span class="font-weight-bold badge {% if attendance_days >= 5 %}badge-success{% else %}badge-warning{% endif %} p-2">
+                            {{ attendance_days }} / 5 days
+                        </span>
+                    </div>
+                    <div class="progress mb-3 custom-progress" style="height: 12px;">
+                        <div class="progress-bar {% if attendance_days >= 5 %}bg-success{% else %}bg-primary{% endif %}" 
+                            role="progressbar" 
+                            style="width: {{ attendance_days|floatformat:0|default:0|multiply:20 }}%"
+                            aria-valuenow="{{ attendance_days }}" 
+                            aria-valuemin="0" 
+                            aria-valuemax="5">
+                        </div>
+                    </div>
+
+                    {% if not is_eligible %}
+                        <div class="alert alert-warning fade-in custom-alert">
+                            <i class="fas fa-exclamation-triangle mr-2"></i> You need {{ days_until_eligible }} more day{% if days_until_eligible != 1 %}s{% endif %} of attendance to submit a payment request.
+                            <a href="{% url 'mess_bill' %}" class="btn btn-sm btn-outline-primary mt-2 btn-animated">Return to Mess Bill</a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success fade-in custom-alert">
+                            <i class="fas fa-check-circle mr-2"></i> You are eligible to submit a payment request.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Current Dues Summary -->
+            <div class="card mb-4 dues-card shadow-sm rounded-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i> Current Dues</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-primary dues-alert custom-alert">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">TOTAL DUE AMOUNT</span>
+                            <span class="font-weight-bold h3 mb-0 amount-highlight">₹{{ current_dues }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Request Form -->
+            {% if is_eligible %}
+            <div class="card mb-4 form-card shadow-lg rounded-lg">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-paper-plane mr-2"></i> Submit Payment Request</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" enctype="multipart/form-data" class="needs-validation modern-form" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="amount" class="font-weight-bold">Amount <span class="text-danger">*</span></label>
+                            <div class="input-group input-group-custom">
+                                <div class="input-group-prepend">
+                                    <span class="input-group-text">Rs</span>
+                                </div>
+                                <input type="number" class="form-control" id="amount" name="amount" 
+                                       value="{{ current_dues }}" min="1" step="0.01" required>
+                                <div class="invalid-feedback">
+                                    Please enter a valid amount.
+                                </div>
+                            </div>
+                            <small class="form-text text-muted">Enter the amount you wish to request payment for.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="payment_method" class="font-weight-bold">Payment Method <span class="text-danger">*</span></label>
+                            <select class="form-control custom-select" id="payment_method" name="payment_method" required>
+                                <option value="">-- Select Payment Method --</option>
+                                {% for value, display in payment_methods %}
+                                    <option value="{{ value }}">{{ display }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a payment method.
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="transaction_id">Transaction ID/Reference Number</label>
+                            <input type="text" class="form-control" id="transaction_id" name="transaction_id">
+                            <small class="form-text text-muted">If applicable, enter the transaction reference number.</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="payment_screenshot">Payment Screenshot/Proof (Optional)</label>
+                            <div class="custom-file modern-file-input">
+                                <input type="file" class="custom-file-input" id="payment_screenshot" name="payment_screenshot" accept="image/*,.pdf">
+                                <label class="custom-file-label" for="payment_screenshot">Choose file</label>
+                            </div>
+                            <small class="form-text text-muted">Upload a screenshot or document as proof of payment (JPEG, PNG, PDF).</small>
+                        </div>
+                        
+                        <div class="alert alert-info mt-4 info-alert">
+                            <i class="fas fa-info-circle mr-2 pulse-slow"></i> 
+                            <strong>Note:</strong> Your payment request will be reviewed by an administrator. 
+                            You will be notified once it's approved or rejected.
+                        </div>
+                        
+                        <div class="form-group mt-4 text-center">
+                            <button type="submit" class="btn btn-primary btn-lg btn-submit">
+                                <i class="fas fa-paper-plane mr-2"></i> Submit Payment Request
+                            </button>
+                            <a href="{% url 'mess_bill' %}" class="btn btn-outline-secondary btn-lg ml-2 btn-cancel">
+                                <i class="fas fa-times mr-2"></i> Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // File input display with animation
+        document.querySelector('.custom-file-input').addEventListener('change', function (e) {
+            var fileName = e.target.files[0]?.name || 'Choose file';
+            var nextSibling = e.target.nextElementSibling;
+            nextSibling.innerText = fileName;
+            
+            // Add flash effect to label
+            nextSibling.classList.add('file-selected');
+            setTimeout(() => {
+                nextSibling.classList.remove('file-selected');
+            }, 1000);
+        });
+        
+        // Enhanced form validation with feedback animation
+        var forms = document.getElementsByClassName('needs-validation');
+        Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    
+                    // Shake invalid inputs
+                    const invalidInputs = form.querySelectorAll(':invalid');
+                    invalidInputs.forEach(input => {
+                        input.classList.add('shake-animation');
+                        setTimeout(() => {
+                            input.classList.remove('shake-animation');
+                        }, 500);
+                    });
+                } else {
+                    // Add loading animation to submit button
+                    const submitBtn = form.querySelector('.btn-submit');
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span> Processing...';
+                    submitBtn.disabled = true;
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+        
+        // Add entrance animations
+        document.querySelectorAll('.card').forEach((card, index) => {
+            setTimeout(() => {
+                card.classList.add('card-visible');
+            }, 100 * index);
+        });
+    });
+</script>
+
+{% endblock %}
+
+

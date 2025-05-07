@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% load static %}
+{% load custom_filters %}
 
 {% block title %}Dashboard{% endblock %}
 
@@ -59,9 +60,56 @@
             <div class="dashboard-grid">
                 <!-- Main Content Section -->
                 <div class="main-content">
-                    <!-- Calendar Section -->
-                    <!-- Add your calendar section here -->
-
+                    
+                    <!-- Mess Menu Section -->
+                    <div class="mess-menu-container">
+                        <div class="mess-menu-header">
+                            <i class="fas fa-utensils"></i>
+                            <span>Today's Mess Menu</span>
+                            <a href="{% url 'view_mess_menu' %}" class="btn btn-sm btn-primary float-right">
+                                <i class="fas fa-calendar-week"></i> Full Menu
+                            </a>
+                        </div>
+                        
+                        <div class="mess-menu-content">
+                            {% if today_menu %}
+                                <div class="today-meals">
+                                    {% for meal_time, meal in today_menu.items %}
+                                        <div class="meal-item">
+                                            <div class="meal-icon">
+                                                {% if meal_time == 'BF' %}
+                                                    <i class="fas fa-coffee"></i>
+                                                {% elif meal_time == 'LN' %}
+                                                    <i class="fas fa-hamburger"></i>
+                                                {% elif meal_time == 'ET' %}
+                                                    <i class="fas fa-cookie"></i>
+                                                {% elif meal_time == 'DN' %}
+                                                    <i class="fas fa-drumstick-bite"></i>
+                                                {% endif %}
+                                            </div>
+                                            <div class="meal-details">
+                                                <h4>
+                                    {% if meal_time == 'BF' %}Breakfast
+                                    {% elif meal_time == 'LN' %}Lunch
+                                    {% elif meal_time == 'ET' %}Evening Tea
+                                    {% elif meal_time == 'DN' %}Dinner
+                                    {% else %}{{ meal_time }}
+                                    {% endif %}
+                                </h4>
+                                                {% if meal %}
+                                                    <p>{{ meal.description }}</p>
+                                                {% else %}
+                                                    <p class="text-muted">Menu not available</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <p class="no-menu">Today's menu is not available.</p>
+                            {% endif %}
+                        </div>
+                    </div>
                     <!-- Notices Section -->
                     <div class="noticeboard-container">
                         <div class="noticeboard-header">
@@ -100,54 +148,70 @@
                         </div>
                         {% endif %}
                     </div>
+                    
+                    
                 </div>
 
                 <!-- Quick Actions Section (Moved to Right) -->
-                <div class="quick-actions">
-                    <div class="card">
-                        <div class="card-header bg-gradient-success">
-                            <h3 class="card-title">
-                                <i class="fas fa-bell mr-2"></i>
-                                Quick Actions
-                            </h3>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="action-buttons">
-                                <a href="{% url 'list_complaints' %}" class="sidebar-link">
-                                    <i class="fas fa-exclamation-circle"></i>Complaints
-                                    {% if unread_complaints > 0 %}
-                                        <span class="badge">{{ unread_complaints }}</span>
-                                    {% endif %}
-                                </a>
+                <!-- Quick Actions Section (Moved to Right) -->                 
+            <div class="quick-actions">                     
+                <div class="card">                         
+                    <div class="card-header bg-gradient-success">                             
+                        <h3 class="card-title">                                 
+                            <i class="fas fa-bell mr-2"></i>                                 
+                            Quick Actions                             
+                        </h3>                         
+                    </div>                         
+                    <div class="card-body p-0">                             
+                        <div class="action-buttons">                                 
+                            <a href="{% url 'list_complaints' %}" class="sidebar-link" id="complaint-link">                                     
+                                <i class="fas fa-exclamation-circle"></i>Complaints                                     
+                                {% if unread_complaints > 0 %}                                         
+                                    <span class="badge">{{ unread_complaints }}</span>                                     
+                                {% endif %}                                 
+                            </a>                                  
+                            
+                            <!-- Add buttons for visitor requests and payment requests -->                                 
+                            <a href="{% url 'admin_manage_visitor_requests' %}" class="sidebar-link" id="visitor-request-link">                                     
+                                <i class="fas fa-user"></i>Visitor Requests                                     
+                                {% if pending_visitor_requests > 0 %}                                         
+                                    <span class="badge">{{ pending_visitor_requests }}</span>                                     
+                                {% endif %}                                 
+                            </a>                                                                  
+                            
+                            <!-- Mess Requests -->                                 
+                            <a href="{% url 'mess_request' %}" class="sidebar-link" id="mess-request-link">                                     
+                                <i class="fas fa-utensils"></i>Mess Requests                                     
+                                {% if unread_mess_requests > 0 %}                                         
+                                    <span class="badge">{{ unread_mess_requests }}</span> <!-- Unread mess requests count -->                                     
+                                {% endif %}                                 
+                            </a>                                  
+                            
+                            <a href="{% url 'admin_payment_requests' %}" class="sidebar-link">                                     
+                                <i class="fas fa-money-bill"></i>Mess Payment Request                                 
+                            </a>                                  
+                            
+                            <a href="{% url 'view_mess_menu' %}" class="sidebar-link">                                     
+                                <i class="fas fa-utensils"></i>View Full Mess Menu                                 
+                            </a>                             
+                        </div>                         
+                    </div>                     
+                </div>                 
+            </div>
 
-                                <!-- Add buttons for visitor requests and payment requests -->
-                                <a href="{% url 'admin_manage_visitor_requests' %}" class="sidebar-link">
-                                    <i class="fas fa-user"></i>Visitor Requests
-                                    {% if pending_visitor_requests > 0 %}
-                                        <span class="badge">{{ pending_visitor_requests }}</span>
-                                    {% endif %}
-                                </a>
-                                
-
-                                <a href="{% url 'admin_payment_requests' %}" class="sidebar-link">
-                                    <i class="fas fa-credit-card"></i>Payment Requests
-                                    {% if pending_payment_requests > 0 %}
-                                        <span class="badge">{{ pending_payment_requests }}</span> <!-- Unread payment requests count -->
-                                    {% endif %}
-                                </a>
-
-                                                <!-- Mess Requests -->
-                                <a href="{% url 'mess_request' %}" class="sidebar-link">
-                                    <i class="fas fa-utensils"></i>Mess Requests
-                                    {% if unread_mess_requests > 0 %}
-                                        <span class="badge">{{ unread_mess_requests }}</span> <!-- Unread mess requests count -->
-                                    {% endif %}
-                                </a>
-
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- Testing buttons (remove in production) -->
+            <div class="mt-4 pl-3" style="display: none;">
+                <h5>Testing Notifications</h5>
+                <button onclick="simulateNewNotification('complaint')" class="btn btn-sm btn-outline-danger">
+                    Test Complaint Notification
+                </button>
+                <button onclick="simulateNewNotification('visitor')" class="btn btn-sm btn-outline-primary">
+                    Test Visitor Notification
+                </button>
+                <button onclick="simulateNewNotification('mess')" class="btn btn-sm btn-outline-success">
+                    Test Mess Notification
+                </button>
+            </div>
 
             </div>
         </div>
@@ -156,6 +220,7 @@
 
 <!-- Dashboard Styling -->
 <style>
+    
     /* General Layout */
     .content-wrapper {
         background-color: #f3f4f6;
@@ -319,6 +384,15 @@
         transform: translateX(5px);
     }
 
+
+    .badge {
+        background-color: #ef4444;
+        color: white;
+        font-size: 0.75rem;
+        padding: 0.125rem 0.5rem;
+        border-radius: 9999px;
+    }
+
     @media (max-width: 1024px) {
         .dashboard-grid {
             grid-template-columns: 1fr;
@@ -326,7 +400,7 @@
     }
      /* General Style for the Noticeboard Container */
      .noticeboard-container {
-        background-color: #fff3e0;
+        background-color: #f0dab8;
         border-radius: 10px;
         padding: 1.5rem;
         margin-top: 1.5rem;
@@ -436,19 +510,111 @@
         font-style: italic;
     }
 
+    /* Mess Menu Styles */
+    .mess-menu-container {
+        background-color: #dfcfc8;
+        border-radius: 10px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .mess-menu-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #333;
+    }
+
+    .mess-menu-header i {
+        margin-right: 0.5rem;
+        color: #18dd5a;
+    }
+
+    .today-meals {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    .meal-item {
+        display: flex;
+        align-items: flex-start;
+        background-color: #ffffff;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s;
+    }
+
+    .meal-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .meal-icon {
+        background-color: #12b62d;
+        padding: 10px;
+        border-radius: 50%;
+        margin-right: 1rem;
+        font-size: 1rem;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+    }
+
+    .meal-details {
+        flex: 1;
+    }
+
+    .meal-details h4 {
+        font-size: 1.1rem;
+        color: #333;
+        margin-bottom: 0.5rem;
+    }
+
+    .meal-details p {
+        font-size: 0.9rem;
+        color: #555;
+        margin-bottom: 0;
+    }
+
+    .no-menu {
+        text-align: center;
+        padding: 2rem;
+        color: #666;
+        font-style: italic;
+    }
+
     /* Media Query for Responsive Design */
     @media (max-width: 768px) {
-        .noticeboard-container {
+        .noticeboard-container,
+        .mess-menu-container {
             padding: 1rem;
+        }
+        
+        .today-meals {
+            grid-template-columns: 1fr;
         }
     }
 
     @media (max-width: 480px) {
-        .notice-item {
+        .notice-item,
+        .meal-item {
             flex-direction: column;
         }
         
-        .notice-pin {
+        .notice-pin,
+        .meal-icon {
             margin-bottom: 1rem;
             align-self: center;
         }
@@ -468,6 +634,199 @@
     document.addEventListener('DOMContentLoaded', function() {
         // Initialize current date display
         const dateDisplay = document.getElementById('current-date');
+        if (dateDisplay) {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            dateDisplay.textContent = new Date().toLocaleDateString(undefined, options);
+        }
+    
+        // Initialize FullCalendar
+        var calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                height: 'auto',
+                aspectRatio: 1.8,
+                editable: true,
+                selectable: true,
+                selectMirror: true,
+                dayMaxEvents: true,
+                events: [
+                    {
+                        title: 'Fee Due Date',
+                        start: '2024-02-15',
+                        backgroundColor: '#ef4444',
+                        borderColor: '#ef4444'
+                    },
+                    {
+                        title: 'Room Inspection',
+                        start: '2024-02-20',
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#3b82f6'
+                    }
+                ],
+                select: function(info) {
+                    // Handle date selection
+                    const title = prompt('Enter event title:');
+                    if (title) {
+                        calendar.addEvent({
+                            title: title,
+                            start: info.start,
+                            end: info.end,
+                            allDay: info.allDay
+                        });
+                    }
+                    calendar.unselect();
+                }
+            });
+            calendar.render();
+        }
+    
+        // Add Event Button Handler
+        const addEventBtn = document.getElementById('add-event');
+        if (addEventBtn) {
+            addEventBtn.addEventListener('click', function() {
+                const title = prompt('Enter event title:');
+                if (title) {
+                    const date = new Date();
+                    calendar.addEvent({
+                        title: title,
+                        start: date,
+                        allDay: true
+                    });
+                }
+            });
+        }
+    
+        // UPDATED: Notification handling for all notification types
+        function setupNotificationCounter(linkId, countKey) {
+            const link = document.getElementById(linkId);
+            if (link) {
+                // Get the badge element inside the link
+                const badge = link.querySelector('.badge');
+                if (badge) {
+                    // Load count from sessionStorage or default to server-provided value
+                    let count = parseInt(sessionStorage.getItem(countKey)) || parseInt(badge.textContent) || 0;
+                    
+                    // Update badge display
+                    updateBadgeDisplay(badge, count);
+                    
+                    // Add click handler to reset counter
+                    link.addEventListener('click', function() {
+                        sessionStorage.setItem(countKey, '0');
+                        updateBadgeDisplay(badge, 0);
+                    });
+                }
+            }
+        }
+        
+        // Function to update badge display based on count
+        function updateBadgeDisplay(badge, count) {
+            if (count > 0) {
+                badge.textContent = count;
+                badge.style.backgroundColor = '#ef4444'; // Red color for unread
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+        
+        // Setup notification counters for all notification types
+        setupNotificationCounter('complaint-link', 'complaintCount');
+        
+        // Additional notification types - make sure to add IDs to your HTML elements
+        const visitorRequestLink = document.querySelector('a[href*="admin_manage_visitor_requests"]');
+        if (visitorRequestLink) {
+            visitorRequestLink.id = 'visitor-request-link';
+            setupNotificationCounter('visitor-request-link', 'visitorRequestCount');
+        }
+        
+        const messRequestLink = document.querySelector('a[href*="mess_request"]');
+        if (messRequestLink) {
+            messRequestLink.id = 'mess-request-link';
+            setupNotificationCounter('mess-request-link', 'messRequestCount');
+        }
+        
+        // WebSocket setup for real-time notifications (if applicable)
+        function setupWebSocketForNotifications() {
+            // Check if WebSocket is available and your backend supports it
+            if ("WebSocket" in window) {
+                // Create WebSocket connection - update the URL to your WebSocket endpoint
+                const socket = new WebSocket('ws://' + window.location.host + '/ws/notifications/');
+                
+                socket.onmessage = function(e) {
+                    const data = JSON.parse(e.data);
+                    
+                    // Handle different notification types
+                    if (data.notification_type === 'complaint') {
+                        updateNotificationCount('complaintCount', 'complaint-link');
+                    } 
+                    else if (data.notification_type === 'visitor_request') {
+                        updateNotificationCount('visitorRequestCount', 'visitor-request-link');
+                    }
+                    else if (data.notification_type === 'mess_request') {
+                        updateNotificationCount('messRequestCount', 'mess-request-link');
+                    }
+                };
+                
+                socket.onclose = function(e) {
+                    console.error('Notification socket closed unexpectedly');
+                };
+            }
+        }
+        
+        function updateNotificationCount(countKey, linkId) {
+            const link = document.getElementById(linkId);
+            if (link) {
+                const badge = link.querySelector('.badge');
+                if (badge) {
+                    // Get current count
+                    let count = parseInt(sessionStorage.getItem(countKey)) || 0;
+                    // Increment count
+                    count += 1;
+                    // Update sessionStorage
+                    sessionStorage.setItem(countKey, count.toString());
+                    // Update badge display
+                    updateBadgeDisplay(badge, count);
+                }
+            }
+        }
+        
+        // Uncomment this if you're using WebSockets for real-time notifications
+        // setupWebSocketForNotifications();
+        
+        // For testing: Add a function to simulate new notifications
+        window.simulateNewNotification = function(type) {
+            let countKey, linkId;
+            
+            switch(type) {
+                case 'complaint':
+                    countKey = 'complaintCount';
+                    linkId = 'complaint-link';
+                    break;
+                case 'visitor':
+                    countKey = 'visitorRequestCount';
+                    linkId = 'visitor-request-link';
+                    break;
+                case 'mess':
+                    countKey = 'messRequestCount';
+                    linkId = 'mess-request-link';
+                    break;
+                default:
+                    console.error('Unknown notification type');
+                    return;
+            }
+            
+            updateNotificationCount(countKey, linkId);
+        };
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize current date display
+        const dateDisplay = document.getElementById('current-date');
         const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         dateDisplay.textContent = new Date().toLocaleDateString(undefined, options);
     });
@@ -479,66 +838,74 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Initialize FullCalendar
     var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left: 'prev,next today',
-            center: 'title',
-            right: 'dayGridMonth,timeGridWeek,timeGridDay'
-        },
-        height: 'auto',
-        aspectRatio: 1.8,
-        editable: true,
-        selectable: true,
-        selectMirror: true,
-        dayMaxEvents: true,
-        events: [
-            {
-                title: 'Fee Due Date',
-                start: '2024-02-15',
-                backgroundColor: '#ef4444',
-                borderColor: '#ef4444'
+    if (calendarEl) {
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
             },
-            {
-                title: 'Room Inspection',
-                start: '2024-02-20',
-                backgroundColor: '#3b82f6',
-                borderColor: '#3b82f6'
+            height: 'auto',
+            aspectRatio: 1.8,
+            editable: true,
+            selectable: true,
+            selectMirror: true,
+            dayMaxEvents: true,
+            events: [
+                {
+                    title: 'Fee Due Date',
+                    start: '2024-02-15',
+                    backgroundColor: '#ef4444',
+                    borderColor: '#ef4444'
+                },
+                {
+                    title: 'Room Inspection',
+                    start: '2024-02-20',
+                    backgroundColor: '#3b82f6',
+                    borderColor: '#3b82f6'
+                }
+            ],
+            select: function(info) {
+                // Handle date selection
+                const title = prompt('Enter event title:');
+                if (title) {
+                    calendar.addEvent({
+                        title: title,
+                        start: info.start,
+                        end: info.end,
+                        allDay: info.allDay
+                    });
+                }
+                calendar.unselect();
             }
-        ],
-        select: function(info) {
-            // Handle date selection
-            const title = prompt('Enter event title:');
-            if (title) {
-                calendar.addEvent({
-                    title: title,
-                    start: info.start,
-                    end: info.end,
-                    allDay: info.allDay
-                });
-            }
-            calendar.unselect();
-        }
-    });
-    calendar.render();
+        });
+        calendar.render();
+    }
 
     // Add Event Button Handler
-    document.getElementById('add-event').addEventListener('click', function() {
-        const title = prompt('Enter event title:');
-        if (title) {
-            const date = new Date();
-            calendar.addEvent({
-                title: title,
-                start: date,
-                allDay: true
-            });
-        }
-    });
+    const addEventBtn = document.getElementById('add-event');
+    if (addEventBtn) {
+        addEventBtn.addEventListener('click', function() {
+            const title = prompt('Enter event title:');
+            if (title) {
+                const date = new Date();
+                calendar.addEvent({
+                    title: title,
+                    start: date,
+                    allDay: true
+                });
+            }
+        });
+    }
 
     // Reset complaint count in session when clicked
-    document.getElementById('complaint-link').addEventListener('click', function() {
-        sessionStorage.setItem('complaintCount', '0');
-    });
+    const complaintLink = document.getElementById('complaint-link');
+    if (complaintLink) {
+        complaintLink.addEventListener('click', function() {
+            sessionStorage.setItem('complaintCount', '0');
+        });
+    }
 });
 </script>
 

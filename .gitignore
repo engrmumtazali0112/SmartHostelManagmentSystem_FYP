@@ -1,7 +1,8 @@
-# Ignore AppData and cache files
+
+
+# Ignore AppData
 AppData/
 *.log
+*.
 *.cache
-
-*.jtx
-
+node_modules/

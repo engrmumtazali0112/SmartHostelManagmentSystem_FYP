@@ -1,0 +1,147 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Success</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <style>
+        body {
+          background-color: #f8f9fa;
+          color: #333;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          height: 100vh;
+          font-family: 'Poppins', sans-serif;
+        }
+  
+        .success-container {
+          text-align: center;
+          background-color: #ffffff;
+          padding: 2.5rem;
+          border-radius: 1rem;
+          box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+          max-width: 500px;
+          width: 90%;
+        }
+  
+        .success-icon {
+          font-size: 5rem;
+          color: #28a745;
+          margin-bottom: 1rem;
+        }
+  
+        .success-text {
+          font-size: 2rem;
+          margin: 1rem 0;
+          font-weight: 600;
+          color: #28a745;
+        }
+  
+        .details-container {
+          background-color: #f8f9fa;
+          border-radius: 0.5rem;
+          padding: 1.5rem;
+          margin: 1.5rem 0;
+          text-align: left;
+        }
+        
+        .detail-item {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 0.75rem;
+          font-size: 0.95rem;
+        }
+        
+        .detail-label {
+          color: #6c757d;
+        }
+        
+        .detail-value {
+          font-weight: 600;
+          color: #212529;
+        }
+        
+        .btn-custom {
+          background-color: #9568ff;
+          border-color: #9568ff;
+          font-size: 1rem;
+          padding: 0.5rem 1.5rem;
+          border-radius: 0.5rem;
+          color: white;
+          font-weight: bold;
+          margin: 0.5rem;
+          transition: all 0.3s ease;
+        }
+  
+        .btn-custom:hover {
+          background-color: #6f4bcc;
+          border-color: #6f4bcc;
+          color: white;
+          transform: translateY(-2px);
+        }
+        
+        .receipt-number {
+          font-size: 1.1rem;
+          color: #6c757d;
+          margin-top: 0.5rem;
+        }
+      </style>
+</head>
+<body>
+  <div class="success-container">
+    <i class="fas fa-check-circle success-icon"></i>
+    <div class="success-text">Payment Successful!</div>
+    
+    {% if receipt_number %}
+    <p class="receipt-number">Receipt: #{{ receipt_number }}</p>
+    {% endif %}
+    
+    {% if student_name and amount %}
+    <div class="details-container">
+      <div class="detail-item">
+        <span class="detail-label">Student:</span>
+        <span class="detail-value">{{ student_name }}</span>
+      </div>
+      
+      {% if registration_number %}
+      <div class="detail-item">
+        <span class="detail-label">Registration:</span>
+        <span class="detail-value">{{ registration_number }}</span>
+      </div>
+      {% endif %}
+      
+      {% if semester %}
+      <div class="detail-item">
+        <span class="detail-label">Semester:</span>
+        <span class="detail-value">{{ semester }}</span>
+      </div>
+      {% endif %}
+      
+      <div class="detail-item">
+        <span class="detail-label">Amount Paid:</span>
+        <span class="detail-value">Rs{{ amount }}</span>
+      </div>
+      
+      <div class="detail-item">
+        <span class="detail-label">Date:</span>
+        <span class="detail-value">{{ payment.Payment_Date|date:"M d, Y" }}</span>
+      </div>
+    </div>
+    {% else %}
+    <p class="mt-3">Your payment has been processed successfully.</p>
+    {% endif %}
+    
+    <div class="mt-4">
+      <a href="{% url 'account_book' %}" class="btn btn-custom">View Payment History</a>
+      <a href="{% url 'student_dashboard' %}" class="btn btn-custom">Back to Dashboard</a>
+    </div>
+  </div>
+</body>
+</html>

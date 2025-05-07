@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}My Mess Bills{% endblock %}
+
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+<style>
+    .bill-card {
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+    .bill-paid {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .bill-unpaid {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    .payment-btn {
+        margin-top: 20px;
+    }
+    .summary-box {
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .status-pending {
+        color: #856404;
+        background-color: #fff3cd;
+        padding: 5px 10px;
+        border-radius: 3px;
+    }
+    .status-approved {
+        color: #155724;
+        background-color: #d4edda;
+        padding: 5px 10px;
+        border-radius: 3px;
+    }
+    .status-rejected {
+        color: #721c24;
+        background-color: #f8d7da;
+        padding: 5px 10px;
+        border-radius: 3px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">My Mess Bills</h1>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Payment Status Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            <!-- Student Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Student Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Name:</strong> {{ student.F_Name }} {{ student.L_Name }}</p>
+                    <p><strong>Registration Number:</strong> {{ student.reg_no }}</p>
+                </div>
+            </div>
+            
+            <!-- Unpaid Bills -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Unpaid Bills</h5>
+                </div>
+                <div class="card-body">
+                    {% if unpaid_bills %}
+                        <div class="summary-box mb-3">
+                            <h5>Total Due: ${{ total_due }}</h5>
+                            {% if pending_request %}
+                                <p class="mt-2 mb-0"><span class="status-pending">Pending Payment Request</span></p>
+                            {% else %}
+                                <button id="pay-button" class="btn btn-primary mt-2">Pay Now</button>
+                            {% endif %}
+                        </div>
+                        
+                        {% for bill in unpaid_bills %}
+                            <div class="bill-card bill-unpaid">
+                                <h6>Bill Date: {{ bill.bill_date }}</h6>
+                                <p><strong>Amount Due:</strong> ${{ bill.amount_due }}</p>
+                                <p><strong>Status:</strong> Unpaid</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No unpaid bills found.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Payment Requests -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Payment Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if payment_requests %}
+                        {% for request in payment_requests %}
+                            <div class="bill-card {% if request.status == 'APPROVED' %}bill-paid{% elif request.status == 'REJECTED' %}bill-unpaid{% else %}{% endif %}">
+                                <h6>Request Date: {{ request.request_date }}</h6>
+                                <p><strong>Amount:</strong> ${{ request.amount }}</p>
+                                <p>
+                                    <strong>Status:</strong> 
+                                    {% if request.status == 'PENDING' %}
+                                        <span class="status-pending">Pending</span>
+                                    {% elif request.status == 'APPROVED' %}
+                                        <span class="status-approved">Approved</span>
+                                    {% else %}
+                                        <span class="status-rejected">Rejected</span>
+                                    {% endif %}
+                                </p>
+                                {% if request.admin_note %}
+                                    <p><strong>Note:</strong> {{ request.admin_note }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No payment requests found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <!-- Payment History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Payment History</h5>
+                </div>
+                <div class="card-body">
+                    {% if payment_history %}
+                        {% for payment in payment_history %}
+                            <div class="bill-card bill-paid">
+                                <h6>Payment Date: {{ payment.payment_date }}</h6>
+                                <p><strong>Amount:</strong> ${{ payment.amount }}</p>
+                                <p><strong>Method:</strong> {{ payment.get_payment_method_display }}</p>
+                                {% if payment.payment_note %}
+                                    <p><strong>Note:</strong> {{ payment.payment_note }}</p>
+                                {% endif %}
+                                <p><strong>Bill Date:</strong> {{ payment.bill.bill_date }}</p>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>No payment history found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Stripe Integration
+    const stripe = Stripe('{{ stripe_publishable_key }}');
+    const payButton = document.getElementById('pay-button');
+    
+    if (payButton) {
+        payButton.addEventListener('click', function() {
+            // Show loading state
+            payButton.disabled = true;
+            payButton.textContent = 'Processing...';
+            
+            // Create checkout session
+            fetch('{% url "create_stripe_checkout" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+            })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(session) {
+                if (session.error) {
+                    // Show error
+                    alert(session.error);
+                    payButton.disabled = false;
+                    payButton.textContent = 'Pay Now';
+                } else {
+                    // Redirect to Stripe Checkout
+                    return stripe.redirectToCheckout({ sessionId: session.id });
+                }
+            })
+            .then(function(result) {
+                if (result && result.error) {
+                    alert(result.error.message);
+                    payButton.disabled = false;
+                    payButton.textContent = 'Pay Now';
+                }
+            })
+            .catch(function(error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+                payButton.disabled = false;
+                payButton.textContent = 'Pay Now';
+            });
+        });
+    }
+</script>
+{% endblock %}
+{% endblock %}

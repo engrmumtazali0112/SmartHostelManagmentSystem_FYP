@@ -1,0 +1,217 @@
+/* Main Layout */
+:root {
+    --primary-color: #3498db;
+    --danger-color: #e74c3c;
+    --warning-color: #f39c12;
+    --success-color: #2ecc71;
+    --text-color: #34495e;
+    --light-gray: #f5f5f5;
+    --border-color: #ecf0f1;
+    --hover-bg: #f8f9fa;
+    --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    --card-radius: 8px;
+    --transition: all 0.3s ease;
+  }
+  
+  body {
+    background-color: #fdf6e8; /* Light beige background from image */
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  /* Main content styling */
+  .main-content {
+    padding: 30px;
+    max-width: 900px;
+    margin: 0 auto;
+    background-color: #fdf6e8; /* Match beige background */
+    border-radius: 8px;
+    box-shadow: none; /* Remove box-shadow to match image */
+  }
+  
+  /* Content Header */
+  .content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding: 10px 0;
+  }
+  
+  .content-header h1 {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+  }
+  
+  .content-header h1:before {
+    content: "📢"; /* Megaphone emoji */
+    margin-right: 10px;
+    color: #e74c3c; /* Red color from image */
+  }
+  
+  /* Add Button */
+  .add-notice-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 8px 16px;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+  }
+  
+  .add-notice-btn i {
+    margin-right: 8px;
+  }
+  
+  .add-notice-btn:hover {
+    background-color: #2980b9;
+    box-shadow: var(--box-shadow);
+  }
+  
+  /* Hide table headers */
+  .table thead {
+    display: none;
+  }
+  
+  /* Card style for each notice */
+  .notice-card {
+    background-color: white;
+    border-radius: var(--card-radius);
+    box-shadow: var(--box-shadow);
+    margin-bottom: 15px;
+    padding: 20px 20px 60px 80px; /* Extra padding for elements */
+    position: relative;
+    display: block;
+  }
+  
+  /* Notice avatar */
+  .notice-avatar {
+    position: absolute;
+    left: 20px;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: #ff6b6b; /* Red circle from image */
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+    font-size: 18px;
+  }
+  
+  /* Notice title */
+  .notice-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-bottom: 5px;
+    color: var(--text-color);
+  }
+  
+  /* Notice description */
+  .notice-description {
+    color: #7f8c8d;
+    margin-bottom: 25px;
+  }
+  
+  /* View More button */
+  .view-more-btn {
+    position: absolute;
+    left: 80px;
+    bottom: 20px;
+    background-color: #3498db;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 4px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: var(--transition);
+  }
+  
+  .view-more-btn:hover {
+    background-color: #2980b9;
+  }
+  
+  /* Posted date */
+  .posted-date {
+    position: absolute;
+    right: 20px;
+    bottom: 20px;
+    font-size: 14px;
+    color: #95a5a6;
+  }
+  
+  /* Alert Styling */
+  .alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    background-color: #f39c12;
+    border-radius: 5px;
+    color: white;
+    font-size: 16px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+  }
+  
+  .alert .close {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: inherit;
+    cursor: pointer;
+  }
+  
+  /* Card header for section titles */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+  }
+  
+  .section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Count badge */
+  .count-badge {
+    background-color: #e74c3c;
+    color: white;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    margin-left: 8px;
+  }
+  
+  /* Make the notice cards responsive for mobile */
+  @media (max-width: 768px) {
+    .main-content {
+      padding: 15px;
+    }
+    
+    .notice-card {
+      padding: 15px 15px 70px 70px;
+    }
+    
+    .view-more-btn {
+      left: 70px;
+    }
+  }

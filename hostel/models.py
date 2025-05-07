@@ -2,27 +2,64 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import RegexValidator
-
+from django.core.exceptions import ValidationError
 import datetime
+import stripe
 
 # ==========================
 # Hostel Model
 # ==========================
-
-from django.core.exceptions import ValidationError
 
 class Hostel(models.Model):
     Hostel_ID = models.AutoField(primary_key=True)
     Hostel_Name = models.CharField(max_length=255, unique=True)
     No_Of_Rooms = models.IntegerField(default=0)
     No_Of_Students = models.IntegerField(default=0)
-    Single_Seater_Rooms = models.IntegerField(default=0)
+    # Dynamic room capacity fields (1-10 seaters)
+    One_Seater_Rooms = models.IntegerField(default=0)
     Two_Seater_Rooms = models.IntegerField(default=0)
     Three_Seater_Rooms = models.IntegerField(default=0)
+    Four_Seater_Rooms = models.IntegerField(default=0)
+    Five_Seater_Rooms = models.IntegerField(default=0)
     Six_Seater_Rooms = models.IntegerField(default=0)
+    Seven_Seater_Rooms = models.IntegerField(default=0)
+    Eight_Seater_Rooms = models.IntegerField(default=0)
+    Nine_Seater_Rooms = models.IntegerField(default=0)
+    Ten_Seater_Rooms = models.IntegerField(default=0)
+    
+    # Room prices for each type
+    One_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Two_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Three_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Four_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Five_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Six_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Seven_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Eight_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Nine_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Ten_Seater_Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     def total_rooms(self):
-        return self.Single_Seater_Rooms + self.Two_Seater_Rooms + self.Three_Seater_Rooms + self.Six_Seater_Rooms
+        return (self.One_Seater_Rooms + self.Two_Seater_Rooms + 
+                self.Three_Seater_Rooms + self.Four_Seater_Rooms + 
+                self.Five_Seater_Rooms + self.Six_Seater_Rooms + 
+                self.Seven_Seater_Rooms + self.Eight_Seater_Rooms + 
+                self.Nine_Seater_Rooms + self.Ten_Seater_Rooms)
+
+    def total_price(self):
+        """ Method to calculate the total price for all rooms based on their room count and price """
+        return {
+            'One_Seater': self.One_Seater_Rooms * self.One_Seater_Price,
+            'Two_Seater': self.Two_Seater_Rooms * self.Two_Seater_Price,
+            'Three_Seater': self.Three_Seater_Rooms * self.Three_Seater_Price,
+            'Four_Seater': self.Four_Seater_Rooms * self.Four_Seater_Price,
+            'Five_Seater': self.Five_Seater_Rooms * self.Five_Seater_Price,
+            'Six_Seater': self.Six_Seater_Rooms * self.Six_Seater_Price,
+            'Seven_Seater': self.Seven_Seater_Rooms * self.Seven_Seater_Price,
+            'Eight_Seater': self.Eight_Seater_Rooms * self.Eight_Seater_Price,
+            'Nine_Seater': self.Nine_Seater_Rooms * self.Nine_Seater_Price,
+            'Ten_Seater': self.Ten_Seater_Rooms * self.Ten_Seater_Price
+        }
 
     def save(self, *args, **kwargs):
         """
@@ -43,74 +80,53 @@ class Hostel(models.Model):
 
 class Room(models.Model):
     Room_ID = models.AutoField(primary_key=True)
-    Room_Type = models.CharField(max_length=255)
+    Room_Type = models.CharField(max_length=20)
     Capacity = models.IntegerField()
-    Location = models.CharField(max_length=255)
-    Room_No = models.CharField(max_length=50, unique=True)
+    Location = models.CharField(max_length=100)
+    Room_No = models.CharField(max_length=10, unique=True)
     Floor_No = models.IntegerField()
     Students_Alloted = models.IntegerField(default=0)
-    Hostel_ID = models.ForeignKey(Hostel, on_delete=models.CASCADE, related_name="rooms")
-
-    def save(self, *args, **kwargs):
-        """
-        Override save method to automatically set the room capacity based on its type.
-        """
-        capacity_map = {"Single Seater": 1, "Two Seater": 2, "Three Seater": 3, "Six Seater": 6}
-        self.Capacity = capacity_map.get(self.Room_Type, self.Capacity)
-        super().save(*args, **kwargs)
-
-    def remaining_capacity(self):
-        """
-        Calculate the remaining capacity of the room based on the number of students allocated.
-        """
-        return self.Capacity - self.Students_Alloted
-
-    def allocate_student(self):
-        """
-        Allocate one student to the room if there's remaining capacity.
-        """
-        if self.remaining_capacity() > 0:
-            self.Students_Alloted += 1
-            self.save()
-
-    def remove_student(self):
-        """
-        Remove one student from the room and update the allocated student count.
-        """
-        if self.Students_Alloted > 0:
-            self.Students_Alloted -= 1
-            self.save()  # Ensure the room is saved after updating the count
-
-    @property
-    def is_available(self):
-        """
-        Return if the room is available based on remaining capacity.
-        """
-        return self.remaining_capacity() > 0
+    Hostel_ID = models.ForeignKey('Hostel', on_delete=models.CASCADE)
+    room_type_info = models.ForeignKey('RoomType', on_delete=models.SET_NULL, null=True)
+    Price = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Add price field with default value 0
+    is_available = models.BooleanField(default=True)  # Room availability status
 
     def __str__(self):
-        return f"{self.Room_No} ({self.Room_Type})"
+        return f"{self.Room_No} - {self.Room_Type}"
+
+    @property
+    def remaining_capacity(self):
+        """ Returns the remaining capacity of the room. """
+        return self.Capacity - self.Students_Alloted
+
+class RoomType(models.Model):
+    id = models.AutoField(primary_key=True)
+    type_name = models.CharField(max_length=20, unique=True)
+    capacity = models.IntegerField()
+    price = models.IntegerField(default=0)  # Price for the room type
+
+    def __str__(self):
+        return self.type_name
 
 # ==========================
 # Student Model
 # ==========================
 
-
 class Student(models.Model):
-    Room_ID = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, related_name="students")  # Added related_name="students"
+    Room_ID = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, related_name="students")
     Hostel_ID = models.ForeignKey(Hostel, on_delete=models.SET_NULL, null=True)
-
+    
     PAYMENT_STATUS_CHOICES = [
         ('NOT_PAID', 'Not Paid'),
         ('PARTIALLY_PAID', 'Partially Paid'),
         ('FULLY_PAID', 'Fully Paid'),
     ]
-
+    
     Student_ID = models.AutoField(primary_key=True)
     Registration_Number = models.CharField(max_length=20, unique=True, null=True, blank=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE, null=True)
     profile_picture = models.ImageField(upload_to='student_profiles/', null=True, blank=True)
-
+    
     F_Name = models.CharField(max_length=50)
     L_Name = models.CharField(max_length=50)
     Contact_Info = models.CharField(max_length=100)
@@ -118,97 +134,106 @@ class Student(models.Model):
     Department = models.CharField(max_length=100)
     FatherName = models.CharField(max_length=50)
     fee_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='NOT_PAID')
-
+    
     total_paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
+    room_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    total_fee = models.DecimalField(max_digits=10, decimal_places=2, default=0)  # Added for storing total fee
+    paid_installment_count = models.IntegerField(default=0)  # Added missing field
+    
     def update_fee_status(self):
         """
         Update the fee status of the student based on the total paid amount.
         """
-        if self.total_paid_amount == 0:
+        # Ensure we're working with the latest data
+        total_paid = self.total_paid_amount
+        total_fee = self.total_fee
+        
+        # If total_fee is not set, calculate it
+        if not total_fee or total_fee == 0:
+            per_semester_fee = self.get_per_semester_fee()
+            total_fee = per_semester_fee * 8
+            self.total_fee = total_fee
+
+        # Update fee status based on payment amount
+        if total_paid == 0:
             self.fee_status = 'NOT_PAID'
-        elif self.total_paid_amount < self.total_fee_amount:
+        elif total_paid < total_fee:
             self.fee_status = 'PARTIALLY_PAID'
         else:
             self.fee_status = 'FULLY_PAID'
-        self.save()
-
+            
+        # Only update fee_status field to avoid race conditions
+        self.save(update_fields=['fee_status', 'total_fee'])
+    
     def calculate_remaining_fee(self):
         """
-        Calculate the remaining fee to be paid.
+        Calculate the remaining fee to be paid based on room price and payment history.
+        Returns the remaining amount to be paid by the student.
         """
-        return max(0, self.total_fee_amount - self.total_paid_amount)
-
-    def remove_from_room(self):
-        """
-        Remove student from the room and update the room's allocated student count.
-        """
-        if self.Room_ID:
-            room = self.Room_ID
-            room.remove_student()
-            self.Room_ID = None
-            self.save()  # Save the student's data after removal from room
-
-    @property
-    def total_fee_amount(self):
-        """
-        Return the fee amount based on the room type.
-        Ensure the student has a room before accessing Room_Type.
-        """
-        if self.Room_ID is None:
-            return 0  # Return a default value or raise an error if no room is assigned
-        room_fees = {
-            'Single Seater': 120000,
-            'Two Seater': 96000,
-            'Three Seater': 80000,
-            'Six Seater': 64000
-        }
-        return room_fees.get(self.Room_ID.Room_Type, 100000)
-
-# ==========================
-# Payment Model
-# ==========================
-
-class Payment(models.Model):
-    pdf_file = models.FileField(upload_to='payments_pdfs/', null=True, blank=True)
-    PAYMENT_STATUS_CHOICES = [
-        ('PAID', 'Paid'),
-        ('UNPAID', 'Unpaid'),
-        ('PENDING', 'Pending')
-    ]
-
-    PAYMENT_MODE_CHOICES = [
-        ('CASH', 'Cash'),
-        ('ONLINE', 'Online'),
-        ('BANK', 'Bank')
-    ]
-
-    Payment_ID = models.AutoField(primary_key=True)
-    Student_ID = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='payments')
-    Fee_Type = models.CharField(max_length=255)
-    Payment_Date = models.DateTimeField(auto_now_add=True)
-    Due_Date = models.DateTimeField(null=True, blank=True)
-    Amount_Paid = models.DecimalField(max_digits=10, decimal_places=2)
-    Receipt_Number = models.CharField(max_length=255)
-    Fee_Status = models.CharField(max_length=50, choices=PAYMENT_STATUS_CHOICES, default='UNPAID')
-    Voucher_No = models.CharField(max_length=255, default='VOU-', null=True, blank=True)
-    Payment_Mode = models.CharField(max_length=50, choices=PAYMENT_MODE_CHOICES, default='CASH')
-    Installment_Number = models.IntegerField(null=True, blank=True)
-
-    def save(self, *args, **kwargs):
-        """
-        Generate Voucher number for the payment if not already provided and update the student's fee status.
-        """
-        if not self.Voucher_No or self.Voucher_No == 'VOU-':
-            self.Voucher_No = f'VOU-{timezone.now().strftime("%Y%m%d")}-{self.Payment_ID}'
+        # Get room price (per semester)
+        per_installment = self.get_per_semester_fee()
         
-        super().save(*args, **kwargs)
-
-        student = self.Student_ID
-        student.total_paid_amount = Payment.objects.filter(Student_ID=student).aggregate(
-            total=models.Sum('Amount_Paid')
-        )['total'] or 0
-        student.update_fee_status()
+        # Total fee is 8 semesters * per_installment fee
+        total_fee = per_installment * 8
+        
+        # Update the total_fee field if we have a new value
+        if self.total_fee != total_fee:
+            self.total_fee = total_fee
+            self.save(update_fields=['total_fee'])
+        
+        # Calculate total paid amount from payment records - ensure we get fresh data
+        paid_payments = self.payments.filter(Fee_Status='PAID')
+        total_paid = sum(float(payment.Amount_Paid) for payment in paid_payments)
+        
+        # Calculate the number of paid installments
+        self.paid_installment_count = len(paid_payments)
+        
+        # Update the total_paid_amount field if it doesn't match
+        if self.total_paid_amount != total_paid:
+            self.total_paid_amount = total_paid
+            self.save(update_fields=['total_paid_amount', 'paid_installment_count'])
+            
+            # Update fee status based on new payment info
+            self.update_fee_status()
+        
+        # Return the remaining fee (never less than zero)
+        return max(0, total_fee - total_paid)
+    
+    def get_per_semester_fee(self):
+        """
+        Get the fee amount per semester based on room price or room type.
+        """
+        # First check if we have a stored room_price
+        if hasattr(self, 'room_price') and self.room_price > 0:
+            return float(self.room_price)
+            
+        # If not, try to get from Room
+        elif self.Room_ID:
+            # Try to get price directly from Room
+            if hasattr(self.Room_ID, 'Price') and self.Room_ID.Price and self.Room_ID.Price > 0:
+                return float(self.Room_ID.Price)
+                
+            # Fall back to room_type_info
+            elif hasattr(self.Room_ID, 'room_type_info') and self.Room_ID.room_type_info:
+                return float(self.Room_ID.room_type_info.price)
+                
+            else:
+                # Default prices based on room type
+                room_type_prices = {
+                    "One Seater": 12000,
+                    "Two Seater": 10000,
+                    "Three Seater": 9000,
+                    "Four Seater": 8000,
+                    "Five Seater": 7500,
+                    "Six Seater": 7000,
+                    "Seven Seater": 6500,
+                    "Eight Seater": 6000,
+                    "Nine Seater": 5500,
+                    "Ten Seater": 5000,
+                    "Default": 5000
+                }
+                return float(room_type_prices.get(self.Room_ID.Room_Type, room_type_prices["Default"]))
+        return 5000.0  # Default if no room assigned
 
 # ==========================
 # Admin Model
@@ -226,218 +251,6 @@ class Admin(models.Model):
 
     def __str__(self):
         return self.Name
-
-# ==========================
-# NoticeBoard Model
-# ==========================
-
-class NoticeBoard(models.Model):
-    Notice_ID = models.AutoField(primary_key=True)
-    Title = models.CharField(max_length=255)
-    Content = models.TextField()
-    Created_At = models.DateTimeField(auto_now_add=True)
-    Expiry_Date = models.DateTimeField(null=True, blank=True)
-    Admin_ID = models.ForeignKey(Admin, on_delete=models.CASCADE)
-    Is_Active = models.BooleanField(default=True)
-
-    def __str__(self):
-        return self.Title
-
-
-# ==========================
-# ShowcaseNotice Model
-# ==========================
-
-# models.py update
-# models.py
-
-from django.db import models
-from django.utils import timezone
-from django.contrib.auth.models import User
-
-class ShowcaseNotice(models.Model):
-    NOTICE_TYPES = (
-        ('noise', 'Noise Complaint'),
-        ('fine', 'Fine'),
-        ('damage', 'Property Damage'),
-        ('conduct', 'Misconduct'),
-        ('other', 'Other'),
-    )
-    
-    title = models.CharField(max_length=200, blank=True)
-    description = models.TextField()
-    notice_type = models.CharField(max_length=20, choices=NOTICE_TYPES)
-    created_date = models.DateTimeField(default=timezone.now)
-    fine_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    due_date = models.DateField(null=True, blank=True)
-    resolved = models.BooleanField(default=False)
-    registration_number = models.CharField(max_length=100, unique=True, null=True, blank=True)
-    students = models.ManyToManyField('Student', through='StudentShowcaseNotice', related_name='showcase_notices')
-    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_showcase_notices')
-    
-    def save(self, *args, **kwargs):
-        if not self.title:
-            self.title = f"{self.get_notice_type_display()} - {timezone.now().strftime('%Y-%m-%d')}"
-        super().save(*args, **kwargs)
-    
-    def __str__(self):
-        return self.title
-
-# models.py
-class StudentShowcaseNotice(models.Model):
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
-    notice = models.ForeignKey(ShowcaseNotice, on_delete=models.CASCADE)
-    read = models.BooleanField(default=False)
-    read_date = models.DateTimeField(null=True, blank=True)
-    paid = models.BooleanField(default=False)  # Added Paid status
-  
-    def mark_as_read(self):
-        self.read = True
-        self.read_date = timezone.now()
-        self.save()
-
-    def mark_as_paid(self):
-        self.paid = True
-        self.save()
-
-    class Meta:
-        unique_together = ('student', 'notice')
-    
-        
-# ==========================
-# Visitor Model
-# ==========================
-class Visitor(models.Model):
-    name = models.CharField(max_length=255)
-    contact_info = models.CharField(max_length=255)
-    visit_date = models.DateTimeField(default=timezone.now)
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='visitors')
-    Visitor_ID_Proof = models.CharField(max_length=50, help_text="ID card number or other identification")
-    purpose_of_visit = models.CharField(max_length=255)
-
-    def __str__(self):
-        return self.name
-
-
-# ==========================
-# Visitor Request Model
-# ==========================
-
-class VisitorRequest(models.Model):
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='visitor_requests')
-    visitor = models.ForeignKey('Visitor', on_delete=models.CASCADE, related_name='requests')
-    request_date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=50, choices=[('PENDING', 'Pending'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected')], default='PENDING')
-    is_read = models.BooleanField(default=False)
-    time_in = models.DateTimeField(null=True, blank=True)
-    time_out = models.DateTimeField(null=True, blank=True)
-
-    def __str__(self):
-        return f"Request for {self.visitor.name} by {self.student.F_Name} {self.student.L_Name}"
-
-# ==========================
-# PaymentRequest Model
-# ==========================
-
-class PaymentRequest(models.Model):
-    STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected')
-    ]
-
-    PAYMENT_MODE_CHOICES = [
-        ('ONLINE', 'Online Banking'),
-        ('UPI', 'UPI'),
-        ('BANK_TRANSFER', 'Bank Transfer')
-    ]
-
-    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='payment_requests')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    bank_name = models.CharField(max_length=100)
-    transaction_id = models.CharField(max_length=100, unique=True)
-    transaction_date = models.DateTimeField()
-    payment_mode = models.CharField(max_length=50, choices=PAYMENT_MODE_CHOICES)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
-    proof_document = models.FileField(upload_to='payment_proofs/', null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    notes = models.TextField(null=True, blank=True)
-    is_read = models.BooleanField(default=False)
-
-    def __str__(self):
-        return f"Payment Request for {self.student.F_Name} {self.student.L_Name} - {self.transaction_id}"
-
-    def approve_request(self):
-        """
-        This method is used to approve a payment request, create a Payment record,
-        and update the status of the request to 'APPROVED'.
-        """
-        current_year = timezone.now().year
-        semesters = [f'Fall-{current_year + i}' for i in range(4)] + \
-                    [f'Spring-{current_year + i + 1}' for i in range(4)]
-        
-        existing_payments = self.student.payments.all()
-        paid_semesters = existing_payments.values_list('Fee_Type', flat=True)
-        
-        # Find the first unpaid installment
-        next_installment = None
-        for semester in semesters:
-            if semester not in paid_semesters:
-                next_installment = semester
-                break
-
-        if next_installment:
-            install_number = existing_payments.filter(Fee_Status='PAID').count() + 1
-            voucher_no = f"VOU-{self.student.Registration_Number}-{install_number}"
-            
-            # Create a payment record
-            payment = Payment.objects.create(
-                Student_ID=self.student,
-                Amount_Paid=self.amount,
-                Payment_Mode=self.payment_mode,
-                Fee_Status='PAID',
-                Receipt_Number=self.transaction_id,
-                Fee_Type=next_installment,
-                Voucher_No=voucher_no,
-                Installment_Number=install_number
-            )
-            
-            self.status = 'APPROVED'
-            self.save()
-            return payment
-        else:
-            raise ValueError("All installments have been paid for this student.")
-
-
-
-# ==========================
-# Profile Model (For User Profile)
-# ==========================
-
-class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    contact_info = models.CharField(max_length=255, blank=True, null=True)
-
-    def __str__(self):
-        return self.user.username
-
-# ==========================
-# Complaint Model (For Complaints)
-# ==========================
-
-class Complaint(models.Model):
-    Complaint_ID = models.AutoField(primary_key=True)
-    Student_ID = models.ForeignKey('Student', on_delete=models.CASCADE)
-    Admin_ID = models.ForeignKey('Admin', on_delete=models.CASCADE)
-    Complaint_Description = models.TextField()
-    Complaint_Type = models.CharField(max_length=255)
-    Created_At = models.DateTimeField(auto_now_add=True)
-    Updated_At = models.DateTimeField(auto_now=True)
-    is_read = models.BooleanField(default=False)  # Track if complaint is read
-    
-    def __str__(self):
-        return f"Complaint {self.Complaint_ID}"
 
 # ==========================
 # AdminRole Model (For Admin roles and permissions)
@@ -473,9 +286,7 @@ class AdminRole(models.Model):
         return f"{self.user.username} - {self.get_role_display()}"
 
     def get_permissions(self):
-        """
-        Return a dictionary of permissions based on admin role
-        """
+        
         permissions = {
             'superuser': {
                 'can_manage_users': True,
@@ -499,28 +310,311 @@ class AdminRole(models.Model):
         return permissions.get(self.role, {})
 
 # ==========================
-# Mess Membership Model
+# NoticeBoard Model
 # ==========================
 
-from django.db import models
+class NoticeBoard(models.Model):
+    Notice_ID = models.AutoField(primary_key=True)
+    Title = models.CharField(max_length=255)
+    Content = models.TextField()
+    Created_At = models.DateTimeField(auto_now_add=True)
+    Expiry_Date = models.DateTimeField(null=True, blank=True)
+    Admin_ID = models.ForeignKey(Admin, on_delete=models.CASCADE)
+    Is_Active = models.BooleanField(default=True)
 
-# models.py
+    def __str__(self):
+        return self.Title
 
-from django.db import models
+
+# ==========================
+# ShowcaseNotice Model
+# ==========================
+
+class ShowcaseNotice(models.Model):
+    NOTICE_TYPES = (
+        ('noise', 'Noise Complaint'),
+        ('fine', 'Fine'),
+        ('damage', 'Property Damage'),
+        ('conduct', 'Misconduct'),
+        ('other', 'Other'),
+    )
+    
+    title = models.CharField(max_length=200, blank=True)
+    description = models.TextField()
+    notice_type = models.CharField(max_length=20, choices=NOTICE_TYPES)
+    created_date = models.DateTimeField(default=timezone.now)
+    fine_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    due_date = models.DateField(null=True, blank=True)
+    resolved = models.BooleanField(default=False)
+    registration_number = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    students = models.ManyToManyField('Student', through='StudentShowcaseNotice', related_name='showcase_notices')
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_showcase_notices')
+    
+    def save(self, *args, **kwargs):
+        if not self.title:
+            self.title = f"{self.get_notice_type_display()} - {timezone.now().strftime('%Y-%m-%d')}"
+        super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return self.title
+
+class StudentShowcaseNotice(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    notice = models.ForeignKey(ShowcaseNotice, on_delete=models.CASCADE)
+    read = models.BooleanField(default=False)
+    read_date = models.DateTimeField(null=True, blank=True)
+    paid = models.BooleanField(default=False)  # Added Paid status
+  
+    def mark_as_read(self):
+        self.read = True
+        self.read_date = timezone.now()
+        self.save()
+
+    def mark_as_paid(self):
+        self.paid = True
+        self.save()
+
+    class Meta:
+        unique_together = ('student', 'notice')
+
+# ==========================
+# Visitor Model
+# Visitor Request Model
+# ==========================
+
+class Visitor(models.Model):
+    name = models.CharField(max_length=255)
+    contact_info = models.CharField(max_length=255)
+    visit_date = models.DateTimeField(default=timezone.now)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='visitors')
+    Visitor_ID_Proof = models.CharField(max_length=50, help_text="ID card number or other identification")
+    purpose_of_visit = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+class VisitorRequest(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='visitor_requests')
+    visitor = models.ForeignKey('Visitor', on_delete=models.CASCADE, related_name='requests')
+    request_date = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=50, choices=[('PENDING', 'Pending'), ('APPROVED', 'Approved'), ('REJECTED', 'Rejected')], default='PENDING')
+    is_read = models.BooleanField(default=False)
+    time_in = models.DateTimeField(null=True, blank=True)
+    time_out = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Request for {self.visitor.name} by {self.student.F_Name} {self.student.L_Name}"
+
+# ==========================
+# Payment Model
+# ==========================
+
+class Payment(models.Model):
+    pdf_file = models.FileField(upload_to='payments_pdfs/', null=True, blank=True)
+    PAYMENT_STATUS_CHOICES = [
+        ('PAID', 'Paid'),
+        ('UNPAID', 'Unpaid'),
+        ('PENDING', 'Pending')
+    ]
+    PAYMENT_MODE_CHOICES = [
+        ('CASH', 'Cash'),
+        ('ONLINE', 'Online'),
+        ('BANK', 'Bank')
+    ]
+    
+    Payment_ID = models.AutoField(primary_key=True)
+    Student_ID = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='payments')
+    Fee_Type = models.CharField(max_length=255)
+    Amount_Due = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    Payment_Date = models.DateTimeField(null=True, blank=True)
+    Due_Date = models.DateTimeField(null=True, blank=True)
+    Amount_Paid = models.DecimalField(max_digits=10, decimal_places=2)
+    Receipt_Number = models.CharField(max_length=255)
+    Fee_Status = models.CharField(max_length=50, choices=PAYMENT_STATUS_CHOICES, default='UNPAID')
+    Voucher_No = models.CharField(max_length=255, null=True, blank=True)
+    Payment_Mode = models.CharField(max_length=50, choices=PAYMENT_MODE_CHOICES, null=True, blank=True)
+    Installment_Number = models.IntegerField(null=True, blank=True)
+    
+    def save(self, *args, **kwargs):
+        """
+        Generate Voucher number only for PAID payments and update the student's fee status.
+        """
+        # For paid payments, ensure voucher number and payment date
+        if self.Fee_Status == 'PAID':
+            if not self.Voucher_No or self.Voucher_No is None:
+                # Generate voucher number for paid payments
+                self.Voucher_No = f'STRIPE-{self.Student_ID.Registration_Number}-{self.Installment_Number}'
+                
+            # Ensure payment date exists
+            if not self.Payment_Date:
+                self.Payment_Date = timezone.now()
+        
+        super().save(*args, **kwargs)
+        
+        # Update student's payment information and status
+        self.update_student_payment_info()
+    
+    def update_student_payment_info(self):
+        """Update student's payment information and fee status"""
+        student = self.Student_ID
+        
+        # Calculate the total amount paid by the student
+        total_paid = Payment.objects.filter(
+            Student_ID=student,
+            Fee_Status='PAID'
+        ).aggregate(total=models.Sum('Amount_Paid'))['total'] or 0
+        
+        # Update student's total_paid_amount
+        student.total_paid_amount = total_paid
+        
+        # Calculate total fee
+        if hasattr(student, 'total_fee') and student.total_fee > 0:
+            total_fee = student.total_fee
+        else:
+            # Calculate if not set
+            per_installment = student.get_per_semester_fee()
+            total_fee = per_installment * 8
+            student.total_fee = total_fee
+        
+        # Calculate how many full installments have been paid
+        per_installment = total_fee / 8
+        paid_installments = min(8, int(total_paid / per_installment))
+        
+        # Store the paid installments count for display purposes
+        student.paid_installment_count = paid_installments
+        
+        # Update student's fee status
+        if total_paid == 0:
+            student.fee_status = 'NOT_PAID'
+        elif total_paid < total_fee:
+            student.fee_status = 'PARTIALLY_PAID'
+        else:
+            student.fee_status = 'FULLY_PAID'
+        
+        # Save with only the necessary fields
+        if hasattr(student, 'paid_installment_count'):
+            student.save(update_fields=['fee_status', 'total_paid_amount', 'total_fee', 'paid_installment_count'])
+        else:
+            student.save(update_fields=['fee_status', 'total_paid_amount', 'total_fee'])
+    
+    @staticmethod
+    def update_student_fee_status(student):
+        """Update student fee status based on payments"""
+        # Calculate total paid amount
+        total_paid = student.payments.filter(Fee_Status='PAID').aggregate(
+            total=models.Sum('Amount_Paid'))['total'] or 0
+        
+        # Get or calculate total fee
+        if hasattr(student, 'total_fee') and student.total_fee > 0:
+            total_fee = student.total_fee
+        else:
+            per_installment = student.get_per_semester_fee()
+            total_fee = per_installment * 8
+            student.total_fee = total_fee
+        
+        # Update student's total_paid_amount
+        student.total_paid_amount = total_paid
+        
+        # Calculate how many full installments have been paid
+        per_installment = total_fee / 8
+        paid_installments = min(8, int(total_paid / per_installment))
+        
+        # Store the paid installments count for display purposes
+        student.paid_installment_count = paid_installments
+        
+        # Update fee status based on payment
+        if total_paid == 0:
+            student.fee_status = 'NOT_PAID'
+        elif total_paid < total_fee:
+            student.fee_status = 'PARTIALLY_PAID'
+        else:
+            student.fee_status = 'FULLY_PAID'
+        
+        # Save with the necessary fields including paid_installment_count
+        if hasattr(Student, 'paid_installment_count'):
+            student.save(update_fields=['fee_status', 'total_paid_amount', 'total_fee', 'paid_installment_count'])
+        else:
+            student.save(update_fields=['fee_status', 'total_paid_amount', 'total_fee'])
+    
+    @classmethod
+    def process_payment(cls, payment_id, amount, payment_mode='ONLINE'):
+       
+        try:
+            payment = cls.objects.get(Payment_ID=payment_id)
+            
+            payment.Amount_Paid = amount
+            payment.Fee_Status = 'PAID'
+            payment.Payment_Mode = payment_mode
+            payment.Payment_Date = timezone.now()
+            payment.save()  # This will trigger the save method which updates student info
+            
+            # Explicitly update the student model to ensure proper counting
+            student = payment.Student_ID
+            
+            # Count actual paid installments instead of relying on calculations
+            paid_count = student.payments.filter(Fee_Status='PAID').count()
+            if hasattr(student, 'paid_installment_count'):
+                student.paid_installment_count = paid_count
+                student.save(update_fields=['paid_installment_count'])
+            
+            return True, "Payment processed successfully"
+        except cls.DoesNotExist:
+            return False, "Payment record not found"
+
+
+# ==========================
+# Profile Model (For User Profile)
+# ==========================
+
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    contact_info = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return self.user.username
+
+# ==========================
+# Complaint Model (For Complaints)
+# ==========================
+
+class Complaint(models.Model):
+    Complaint_ID = models.AutoField(primary_key=True)
+    Student_ID = models.ForeignKey('Student', on_delete=models.CASCADE)
+    Admin_ID = models.ForeignKey('Admin', on_delete=models.CASCADE)
+    Complaint_Description = models.TextField()
+    Complaint_Type = models.CharField(max_length=255)
+    Created_At = models.DateTimeField(auto_now_add=True)
+    Updated_At = models.DateTimeField(auto_now=True)
+    is_read = models.BooleanField(default=False)  # Track if complaint is read
+    
+    def __str__(self):
+        return f"Complaint {self.Complaint_ID}"
+
+
+# ==========================
+# Finger Print Membership Model
+# ==========================
 
 # Define the Fingerprint model before MessMembership
 class Fingerprint(models.Model):
     student = models.OneToOneField('Student', on_delete=models.CASCADE)
     fingerprint_template = models.BinaryField()  # Store the fingerprint data as binary data
     created_at = models.DateTimeField(auto_now_add=True)
+    last_updated = models.DateTimeField(auto_now=True)
+    
 
     def __str__(self):
         return f"Fingerprint for {self.student.F_Name} {self.student.L_Name}"
+
+# ==========================
+# Mess Membership Model
+# ==========================
 
 class MessMembership(models.Model):
     student = models.OneToOneField('Student', on_delete=models.CASCADE)
     start_date = models.DateField()
     end_date = models.DateField()
+    fingerprint = models.OneToOneField(Fingerprint, on_delete=models.SET_NULL, null=True, blank=True, related_name='membership')
     department = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=False)
     approved = models.BooleanField(default=False)
@@ -535,9 +629,21 @@ class MessMembership(models.Model):
     def __str__(self):
         return f"{self.student.F_Name} {self.student.L_Name} Mess Membership"
 
+class MessRequest(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    request_date = models.DateTimeField(auto_now_add=True)
+    is_read = models.BooleanField(default=False)  # Tracks if the request has been read
+    description = models.TextField()  # Description or details of the mess request
+    
+    def __str__(self):
+        return f"Mess Request by {self.student.full_name} on {self.request_date}"
+    
+    from django.db import models
+
 # ==========================
 # Mess Menu Model
 # ==========================
+
 
 class MessMenu(models.Model):
     # Meal time choices
@@ -612,13 +718,8 @@ class MessMenu(models.Model):
 
 
 # ==========================
-# Mess Attendance Model
+# Mess Attandance Model
 # ==========================
-# Updated models.py with payment tracking
-# Updated models.py with payment request system
-from django.db import models
-from django.utils import timezone
-from django.urls import reverse
 
 class MessAttendance(models.Model):
     student = models.ForeignKey('Student', on_delete=models.CASCADE)
@@ -638,11 +739,10 @@ class MessAttendance(models.Model):
                 self.price_charged = menu_item.price
         super().save(*args, **kwargs)
         
-        # After saving, check if student has completed 10 days of attendance
+        # After saving, check if student has completed 5 days of attendance (changed from 10)
         self.check_attendance_milestone()
     
     def check_attendance_milestone(self):
-        """Check if student has completed 10 days of attendance and create payment request if needed"""
         # Count the number of unique days with attendance in the last 30 days
         today = timezone.now().date()
         thirty_days_ago = today - timezone.timedelta(days=30)
@@ -658,13 +758,13 @@ class MessAttendance(models.Model):
         # Count the number of unique days
         days_count = attendance_days.count()
         
-        # If exactly 10 days completed, create payment request
-        if days_count == 10:
+        # If exactly 5 days completed (changed from 10), create payment request and process with Stripe
+        if days_count == 5:
             # Check if payment request already exists for this milestone
             existing_request = MessPaymentRequest.objects.filter(
                 student=self.student,
                 status='PENDING',
-                milestone_days=10
+                milestone_days=5  # Changed from 10 to 5
             ).exists()
             
             # Get unpaid bills
@@ -684,50 +784,92 @@ class MessAttendance(models.Model):
                     request_date=timezone.now(),
                     amount=total_due,
                     status='PENDING',
-                    milestone_days=10,
-                    request_note=f"Payment request after {days_count} days attendance. Registration: {self.student.reg_no}"
+                    milestone_days=5,  # Changed from 10 to 5
+                    request_note=f"Payment request after {days_count} days attendance. Registration: {self.student.reg_no}",
+                    payment_method='STRIPE'  # Set Stripe as payment method
                 )
                 
                 # Associate bills with the payment request
                 for bill in unpaid_bills:
                     payment_request.bills.add(bill)
-
-
-class MessPaymentRequest(models.Model):
-    STATUS_CHOICES = [
-        ('PENDING', 'Pending'),
-        ('APPROVED', 'Approved'),
-        ('REJECTED', 'Rejected')
-    ]
+                
+                # Process the payment automatically using Stripe
+                self.process_payment_with_stripe(payment_request, total_due)
     
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
-    request_date = models.DateTimeField(default=timezone.now)
-    bills = models.ManyToManyField('MessBill', related_name='payment_requests')
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
-    processed_date = models.DateTimeField(null=True, blank=True)
-    processed_by = models.ForeignKey('auth.User', on_delete=models.SET_NULL, null=True, blank=True, related_name='processed_payments')
-    request_note = models.CharField(max_length=255, blank=True, null=True)
-    admin_note = models.CharField(max_length=255, blank=True, null=True)
-    milestone_days = models.IntegerField(default=10)  # Number of days attendance achieved
+    def process_payment_with_stripe(self, payment_request, amount):
+        # """Process the payment using Stripe"""
+        try:
+            # Get or create Stripe customer for this student
+            stripe_customer = self.get_or_create_stripe_customer()
+            
+            # Create a payment intent
+            payment_intent = stripe.PaymentIntent.create(
+                amount=int(amount * 100),  # Convert to cents
+                currency='usd',  # Change based on your currency
+                customer=stripe_customer.id,
+                description=f"Mess payment for {self.student.F_Name} {self.student.L_Name} (Reg No: {self.student.reg_no})",
+                metadata={
+                    'student_id': self.student.id,
+                    'payment_request_id': payment_request.id,
+                    'registration_number': self.student.reg_no
+                },
+                payment_method_types=['card'],
+                # Attempt to use saved payment method if available
+                payment_method=stripe_customer.invoice_settings.default_payment_method if hasattr(stripe_customer, 'invoice_settings') and hasattr(stripe_customer.invoice_settings, 'default_payment_method') else None,
+                confirm=True if hasattr(stripe_customer, 'invoice_settings') and hasattr(stripe_customer.invoice_settings, 'default_payment_method') else False,
+            )
+            
+            # Record the payment intent ID
+            payment_request.stripe_payment_intent_id = payment_intent.id
+            payment_request.save()
+            
+            # If payment method is saved and confirm=True was successful
+            if payment_intent.status == 'succeeded':
+                self.record_successful_payment(payment_request, amount)
+            
+        except stripe.error.StripeError as e:
+            # Handle Stripe errors
+            payment_request.status = 'FAILED'
+            payment_request.request_note += f" | Stripe Error: {str(e)}"
+            payment_request.save()
     
-    def __str__(self):
-        return f"Payment Request for {self.student.F_Name} {self.student.L_Name} on {self.request_date}"
+    def get_or_create_stripe_customer(self):
+        # """Get or create a Stripe customer for this student"""
+        try:
+            # Check if student already has a Stripe customer ID
+            if hasattr(self.student, 'stripe_customer_id') and self.student.stripe_customer_id:
+                return stripe.Customer.retrieve(self.student.stripe_customer_id)
+            
+            # Create a new customer
+            customer = stripe.Customer.create(
+                email=self.student.email,
+                name=f"{self.student.F_Name} {self.student.L_Name}",
+                metadata={
+                    'student_id': self.student.id,
+                    'registration_number': self.student.reg_no
+                }
+            )
+            
+            # Save the customer ID to the student model
+            self.student.stripe_customer_id = customer.id
+            self.student.save()
+            
+            return customer
+            
+        except stripe.error.StripeError as e:
+            # Log the error
+            print(f"Stripe Error: {str(e)}")
+            raise
     
-    def approve_payment(self, admin_user, note=None):
-        """Approve the payment request and mark bills as paid"""
-        self.status = 'APPROVED'
-        self.processed_date = timezone.now()
-        self.processed_by = admin_user
-        if note:
-            self.admin_note = note
-        self.save()
+    def record_successful_payment(self, payment_request, amount):
+        # """Record successful payment in the system"""
+        # Update payment request status
+        payment_request.status = 'COMPLETED'
+        payment_request.save()
         
-        # Mark bills as paid and create payment record
-        for bill in self.bills.all():
+        # Mark bills as paid
+        for bill in payment_request.bills.all():
             bill.paid_status = True
-            bill.paid_amount = bill.amount_due
-            bill.payment_date = timezone.now()
             bill.save()
             
             # Create payment record
@@ -735,19 +877,58 @@ class MessPaymentRequest(models.Model):
                 student=self.student,
                 bill=bill,
                 payment_date=timezone.now(),
-                amount=bill.amount_due,
-                payment_method='ADMIN',
-                payment_note=f"Payment approved by admin after {self.milestone_days} days attendance"
+                amount=bill.remaining_due(),
+                payment_method='STRIPE',
+                payment_note=f"Automated Stripe payment after 5 days attendance. Payment Intent ID: {payment_request.stripe_payment_intent_id}"
             )
-    
-    def reject_payment(self, admin_user, note=None):
-        """Reject the payment request"""
-        self.status = 'REJECTED'
-        self.processed_date = timezone.now()
-        self.processed_by = admin_user
-        if note:
-            self.admin_note = note
-        self.save()
+
+class MessFee(models.Model):
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)  # Assuming Student model exists
+    total_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    paid_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Mess Fee for {self.student}"
+
+    # Additional methods if needed, like `remaining_due`
+    @property
+    def remaining_due(self):
+        return self.total_cost - self.paid_amount
+# ==========================
+# Mess Payment System Model
+# Mess Bill
+# ==========================
+
+from django.db import models
+from django.utils import timezone
+from django.core.validators import FileExtensionValidator
+
+class MessPaymentRequest(models.Model):
+    STATUS_CHOICES = (
+        ('PENDING', 'Pending'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    )
+
+    student = models.ForeignKey('Student', on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    request_date = models.DateTimeField(default=timezone.now)
+    payment_method = models.CharField(max_length=20, default='CASH')
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    processed_date = models.DateTimeField(blank=True, null=True)
+    admin_note = models.TextField(blank=True, null=True)
+    payment_screenshot = models.FileField(
+        upload_to='payment_screenshots/',
+        validators=[FileExtensionValidator(['pdf', 'jpg', 'jpeg', 'png'])],
+        blank=True, null=True
+    )
+    milestone_days = models.IntegerField(default=0)  # Days attended in last 30 days
+    bills = models.ManyToManyField('MessBill', blank=True)
+
+    def __str__(self):
+        return f"{self.student} - {self.amount} ({self.status})"
 
 
 class MessPayment(models.Model):
@@ -755,6 +936,7 @@ class MessPayment(models.Model):
         ('CASH', 'Cash'),
         ('BANK', 'Bank Transfer'),
         ('ADMIN', 'Admin Approved'),
+        ('STRIPE', 'Stripe'),
         ('OTHER', 'Other')
     ]
     
@@ -764,62 +946,134 @@ class MessPayment(models.Model):
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS, default='CASH')
     payment_note = models.CharField(max_length=255, blank=True, null=True)
+    stripe_payment_id = models.CharField(max_length=100, blank=True, null=True)  # Store Stripe payment ID
     
     def __str__(self):
         return f"Payment of {self.amount} for {self.student.F_Name} {self.student.L_Name} on {self.payment_date}"
 
 
-
-
-
-# ==========================
-# Mess Bill Model
-# ==========================
-
 class MessBill(models.Model):
     student = models.ForeignKey('Student', on_delete=models.CASCADE)
     bill_date = models.DateField(default=timezone.now)
-    amount_due = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    bill_month = models.CharField(max_length=20)
+    bill_year = models.IntegerField()
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     paid_status = models.BooleanField(default=False)
-    paid_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    payment_date = models.DateTimeField(null=True, blank=True)
-    
+
     def __str__(self):
-        return f"Bill for {self.student.F_Name} {self.student.L_Name} - {self.bill_date}"
-    
+        return f"Bill for {self.student.F_Name} {self.student.L_Name} - {self.bill_month} {self.bill_year}"
+
+    def amount_paid(self):
+        # Calculate the amount paid so far by summing payments related to this bill
+        return self.payments.aggregate(total=models.Sum('amount'))['total'] or 0
+
     def remaining_due(self):
-        return self.amount_due - self.paid_amount
+        # Calculate the remaining amount due, i.e., total_amount - amount_paid
+        return self.total_amount - self.amount_paid()
+
+    # If the bill is not fully paid, return the remaining due amount
+    def amount_due(self):
+        return self.remaining_due()
+
+    class Meta:
+        ordering = ['bill_date']
+
+
+# ==========================
+# Stripe PaymnetGateway
+# ==========================
+
+class StripePayment(models.Model):
+    # """
+    # Model to track Stripe payments and their status
+    # """
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+        ('REFUNDED', 'Refunded')
+    ]
     
-    def save(self, *args, **kwargs):
-        # Calculate the bill amount based on attendance
-        if not self.id:  # If it's a new bill
-            attendance_today = MessAttendance.objects.filter(student=self.student, date=self.bill_date)
-            self.amount_due = sum(attendance.price_charged for attendance in attendance_today if attendance.is_present)
+    student = models.ForeignKey('Student', on_delete=models.CASCADE, related_name='stripe_payments')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    stripe_payment_intent_id = models.CharField(max_length=255, blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    semester = models.CharField(max_length=255, blank=True, null=True)
+    payment_record = models.ForeignKey('Payment', on_delete=models.SET_NULL, blank=True, null=True, related_name='stripe_record')
+    
+    def __str__(self):
+        return f"Payment {self.id} - {self.student.Registration_Number} - {self.status}"
+    
+    def complete_payment(self, stripe_payment_intent_id=None):
+        # """
+        # Complete the payment and create a Payment record
+        # """
+        if stripe_payment_intent_id:
+            self.stripe_payment_intent_id = stripe_payment_intent_id
         
-        # If bill is being marked as paid and payment_date isn't set, set it now
-        if self.paid_status and not self.payment_date:
-            self.payment_date = timezone.now()
+        # Get student's info
+        student = self.student
+        
+        # Find next unpaid semester or payment record
+        next_unpaid = student.payments.filter(Fee_Status='UNPAID').order_by('Installment_Number').first()
+        
+        # If there's no unpaid record, create a new payment record
+        if not next_unpaid:
+            # Find the last payment to determine next installment number
+            last_payment = student.payments.order_by('-Installment_Number').first()
+            next_installment = (last_payment.Installment_Number + 1) if last_payment else 1
             
-        super().save(*args, **kwargs)
-
-# ==========================
-# Face Detection Record Model
-# ==========================
-
-class FaceDetectionRecord(models.Model):
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
-    image_url = models.URLField(null=True, blank=True)  # URL for the face detection image
-    detected_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Face detection record for {self.student} on {self.detected_at}"
-
-
-class MessRequest(models.Model):
-    student = models.ForeignKey('Student', on_delete=models.CASCADE)
-    request_date = models.DateTimeField(auto_now_add=True)
-    is_read = models.BooleanField(default=False)  # Tracks if the request has been read
-    description = models.TextField()  # Description or details of the mess request
+            # Generate receipt number
+            receipt_number = f"{student.Registration_Number}-{next_installment}"
+            
+            # Determine the semester
+            semester = self.semester or self._determine_semester(next_installment)
+            
+            # Create new payment record
+            payment = Payment.objects.create(
+                Student_ID=student,
+                Fee_Type=semester,
+                Amount_Due=self.amount,
+                Amount_Paid=self.amount,
+                Receipt_Number=receipt_number,
+                Fee_Status='PAID',
+                Payment_Date=timezone.now(),
+                Payment_Mode='ONLINE',
+                Installment_Number=next_installment
+            )
+        else:
+            # Update existing payment record
+            next_unpaid.Amount_Paid = self.amount
+            next_unpaid.Fee_Status = 'PAID'
+            next_unpaid.Payment_Date = timezone.now()
+            next_unpaid.Payment_Mode = 'ONLINE'
+            next_unpaid.save()
+            payment = next_unpaid
+        
+        # Update this record
+        self.status = 'COMPLETED'
+        self.payment_record = payment
+        self.save()
+        
+        # Force update of student's fee status
+        Payment.update_student_fee_status(student)
+        
+        return payment
     
-    def __str__(self):
-        return f"Mess Request by {self.student.full_name} on {self.request_date}"
+    def _determine_semester(self, installment_number):
+        # """
+        # Determine semester based on installment number
+        # """
+        current_year = timezone.now().year
+        sem_index = installment_number - 1
+        year_offset = sem_index // 2
+        
+        # Even numbers are Fall, odd are Spring
+        if sem_index % 2 == 0:
+            return f"Fall-{current_year + year_offset}"
+        else:
+            return f"Spring-{current_year + year_offset + 1}"
+        
+        

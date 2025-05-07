@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container">
+    <div class="card shadow-sm border-0">
+        <div class="card-header {% if success %}bg-success{% else %}bg-danger{% endif %} text-white">
+            <h3 class="mb-0">
+                {% if success %}
+                <i class="fas fa-check-circle"></i> Payment Successful
+                {% else %}
+                <i class="fas fa-times-circle"></i> Payment Issue
+                {% endif %}
+            </h3>
+        </div>
+        <div class="card-body text-center">
+            {% if success %}
+            <div class="mb-4">
+                <i class="fas fa-check-circle text-success" style="font-size: 5rem;"></i>
+            </div>
+            <h2 class="mb-3">Thank you for your payment!</h2>
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 text-md-right">
+                            <strong>Student Name:</strong>
+                        </div>
+                        <div class="col-md-6 text-md-left">
+                            {{ student_name }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 text-md-right">
+                            <strong>Registration Number:</strong>
+                        </div>
+                        <div class="col-md-6 text-md-left">
+                            {{ registration_number }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 text-md-right">
+                            <strong>Payment Type:</strong>
+                        </div>
+                        <div class="col-md-6 text-md-left">
+                            {% if payment_type == 'MESS' %}
+                                Mess Fee
+                            {% elif payment_type == 'HOSTEL' %}
+                                Hostel Fee
+                            {% else %}
+                                {{ payment_type }}
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 text-md-right">
+                            <strong>Amount Paid:</strong>
+                        </div>
+                        <div class="col-md-6 text-md-left">
+                            ₹{{ amount }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 text-md-right">
+                            <strong>Payment Date:</strong>
+                        </div>
+                        <div class="col-md-6 text-md-left">
+                            {{ payment_date|date:"F d, Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="mb-4">
+                <i class="fas fa-exclamation-triangle text-warning" style="font-size: 5rem;"></i>
+            </div>
+            <h2 class="mb-3">{{ message }}</h2>
+            {% endif %}
+            
+            <div class="mt-4">
+                <a href="{% url 'mess_account_book' %}" class="btn btn-primary">
+                    <i class="fas fa-book"></i> View Account Book
+                </a>
+                <a href="{% url 'dashboard' %}" class="btn btn-secondary ml-2">
+                    <i class="fas fa-home"></i> Go to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

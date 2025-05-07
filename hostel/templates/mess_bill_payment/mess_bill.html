@@ -1,0 +1,379 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mess Bill | Student Portal{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Custom styling */
+    body {
+        font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        background-color: #f8f9fa;
+    }
+
+    .progress {
+        height: 10px;
+        border-radius: 10px;
+    }
+    
+    .progress-bar {
+        background-color: #1f6ab4;
+    }
+    
+    .progress-bar.progress-complete {
+        background-color: #28a745;
+    }
+    
+    .card {
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        margin-bottom: 20px;
+        transition: all 0.3s;
+    }
+    
+    .card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+    }
+    
+    .card-header {
+        font-weight: 600;
+        background-color: #1f6ab4;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+        color: white;
+    }
+
+    .card-header.bg-light {
+        background-color: #f8f9fa !important;
+        color: #212529;
+    }
+    
+    .badge {
+        padding: 8px 12px;
+        border-radius: 30px;
+        font-weight: 500;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: rgba(0,123,255,0.05);
+    }
+    
+    .btn-primary {
+        background-color: #1f6ab4;
+        border-color: #1f6ab4;
+        border-radius: 30px;
+        padding: 10px 25px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        transition: all 0.3s;
+    }
+    
+    .btn-primary:hover {
+        background-color: #155a9c;
+        border-color: #155a9c;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
+    .section-title {
+        border-left: 5px solid #1f6ab4;
+        padding-left: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stats-counter {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1f6ab4;
+    }
+    
+    .info-icon {
+        color: #17a2b8;
+        margin-right: 5px;
+    }
+    
+    .success-icon {
+        color: #28a745;
+        margin-right: 5px;
+    }
+    
+    .warning-icon {
+        color: #ffc107;
+        margin-right: 5px;
+    }
+
+    .alert-primary {
+        background-color: #007bff;
+        color: white;
+    }
+
+    /* Mobile responsive tables */
+    @media screen and (max-width: 767px) {
+        table {
+            border: 0;
+        }
+        table thead {
+            display: none;
+        }
+        table tr {
+            margin-bottom: 10px;
+            display: block;
+            border-bottom: 2px solid #ddd;
+        }
+        table td {
+            display: block;
+            text-align: right;
+            font-size: 13px;
+            border-bottom: 1px dotted #ddd;
+            position: relative;
+            padding-left: 50%;
+        }
+        table td:before {
+            content: attr(data-label);
+            position: absolute;
+            left: 10px;
+            width: 45%;
+            white-space: nowrap;
+            font-weight: bold;
+            text-align: left;
+        }
+        table tfoot {
+            display: block;
+        }
+        table tfoot tr {
+            background-color: #2a77c4;
+            color: white;
+        }
+        table tfoot th {
+            display: block;
+            text-align: right;
+            font-size: 13px;
+            padding-left: 50%;
+            position: relative;
+        }
+        table tfoot th:first-child {
+            text-align: left;
+            padding-left: 10px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-file-invoice mr-2"></i> Mess Bill
+                <span class="float-right">{{ student.F_Name }} {{ student.L_Name }} ({{ student.Registration_Number }})</span>
+            </h3>
+        </div>
+        <div class="card-body">
+            <!-- Payment Eligibility Status -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-tasks mr-2"></i> Payment Eligibility Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-4">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span>Attendance Days (Last 30 Days):</span>
+                            <span class="stats-counter {% if attendance_days >= 5 %}text-success{% else %}text-warning{% endif %}">
+                                {{ attendance_days }} / 5 days
+                            </span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div class="progress mb-3">
+                            <div class="progress-bar {% if attendance_days >= 5 %}progress-complete{% endif %}" role="progressbar" 
+                                style="width: {{ attendance_percentage }}%"
+                                aria-valuenow="{{ attendance_days }}" aria-valuemin="0" aria-valuemax="5">
+                            </div>
+                        </div>
+
+                        {% if attendance_days >= 5 %}
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle success-icon"></i> You have completed 5 days of attendance and are eligible to request payment for your mess dues.
+                            
+                                <form action="{% url 'payment_request_form' %}" method="post" class="mt-3">
+                                    {% csrf_token %}
+                                    <div class="d-flex align-items-center">
+                                        <span class="mr-3">Registration Number: <strong>{{ student.Registration_Number }}</strong></span>
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-money-check-alt mr-1"></i> Request Payment
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle info-icon"></i> You need {{ 5|add:"-"|add:attendance_days }} more day{% if 5|add:"-"|add:attendance_days != 1 %}s{% endif %} of attendance to be eligible for payment request.
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            
+            <!-- Payment Requests -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-history mr-2"></i> Payment Requests</h5>
+                </div>
+                <div class="card-body">
+                    {% if payment_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Request Date</th>
+                                    <th>Amount</th>
+                                    <th>Days</th>
+                                    <th>Status</th>
+                                    <th>Processed Date</th>
+                                    <th>Admin Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for request in payment_requests %}
+                                <tr>
+                                    <td data-label="Request Date">{{ request.request_date|date:"M d, Y H:i" }}</td>
+                                    <td data-label="Amount">₹{{ request.amount }}</td>
+                                    <td data-label="Days">{{ request.milestone_days }}</td>
+                                    <td data-label="Status">
+                                        {% if request.status == 'PENDING' %}
+                                            <span class="badge badge-warning">
+                                                <i class="fas fa-hourglass-half mr-1"></i> Pending
+                                            </span>
+                                        {% elif request.status == 'APPROVED' %}
+                                            <span class="badge badge-success" style="background-color: green;">
+                                                <i class="fas fa-check-circle mr-1"></i> Approved
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-danger">
+                                                <i class="fas fa-times-circle mr-1"></i> Rejected
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td data-label="Processed Date">{{ request.processed_date|date:"M d, Y H:i"|default:"-" }}</td>
+                                    <td data-label="Admin Note">{{ request.admin_note|default:"-" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle info-icon"></i> No payment requests found.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Monthly Bill Breakdown -->
+            <div class="card mb-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-calendar-alt mr-2"></i> Monthly Bill Breakdown</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Breakfast</th>
+                                    <th>Lunch</th>
+                                    <th>Evening Tea</th>
+                                    <th>Dinner</th>
+                                    <th>Daily Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for day in attendance_by_date %}
+                                    <tr>
+                                        <td data-label="Date">{{ day.date|date:"M d, Y" }}</td>
+                                        <td data-label="Breakfast">{% if day.meals.BF %}₹{{ day.meals.BF }}{% else %}-{% endif %}</td>
+                                        <td data-label="Lunch">{% if day.meals.LN %}₹{{ day.meals.LN }}{% else %}-{% endif %}</td>
+                                        <td data-label="Evening Tea">{% if day.meals.ET %}₹{{ day.meals.ET }}{% else %}-{% endif %}</td>
+                                        <td data-label="Dinner">{% if day.meals.DN %}₹{{ day.meals.DN }}{% else %}-{% endif %}</td>
+                                        <td data-label="Daily Total" class="font-weight-bold">₹{{ day.daily_total }}</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">No meal records found for this period.</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="bg-light">
+                                <tr>
+                                    <th colspan="5" class="text-right">Monthly Total:</th>
+                                    <th class="text-primary">₹{{ total_cost }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bill Summary Card -->
+            <div class="card mb-4 shadow-lg rounded-lg">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-invoice-dollar mr-2"></i> Bill Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-secondary border-0 shadow-sm rounded-lg mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0 font-weight-normal">TOTAL DUE AMOUNT</span>
+                            <span class="font-weight-bold h3 mb-0 text-dark">Rs {{ total_due }}</span>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Make tables responsive
+        function adjustTableForMobile() {
+            if (window.innerWidth < 768) {
+                $('table').each(function() {
+                    // Only if it hasn't been processed already
+                    if (!$(this).hasClass('processed')) {
+                        var headerText = [];
+                        $(this).find('th').each(function(i) {
+                            headerText[i] = $(this).text();
+                        });
+                        
+                        $(this).find('td').each(function(i) {
+                            if (!$(this).attr('data-label') && headerText[$(this).index()]) {
+                                $(this).attr('data-label', headerText[$(this).index()]);
+                            }
+                        });
+                        
+                        $(this).addClass('processed');
+                    }
+                });
+            }
+        }
+        
+        // Initial call to adjust table responsiveness
+        adjustTableForMobile();
+
+        // Adjust table on window resize
+        $(window).resize(adjustTableForMobile);
+
+        // jQuery toggle functionality for card expansion
+        $('#monthlyBillCard .card-header').on('click', function() {
+            var table = $('#monthlyBillTable');
+            table.toggleClass('collapse');
+        });
+    });
+</script>
+
+{% endblock %}

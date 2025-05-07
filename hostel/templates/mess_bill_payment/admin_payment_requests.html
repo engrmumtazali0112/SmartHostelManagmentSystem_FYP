@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="card shadow mb-4">
+        <div class="card-body p-4">
+            <!-- Filters -->
+            <div class="row mb-4">
+                <div class="col-lg-8">
+                    <form method="get" class="form-inline">
+                        <div class="input-group mb-3 mr-2">
+                            <input type="text" class="form-control" name="search" placeholder="Search by student name or ID" value="{{ search_query }}">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <select name="status" class="form-control mb-3 mr-2" onchange="this.form.submit()">
+                            <option value="">All Statuses</option>
+                            <option value="PENDING" {% if status_filter == 'PENDING' %}selected{% endif %}>Pending</option>
+                            <option value="APPROVED" {% if status_filter == 'APPROVED' %}selected{% endif %}>Approved</option>
+                            <option value="REJECTED" {% if status_filter == 'REJECTED' %}selected{% endif %}>Rejected</option>
+                        </select>
+                        
+                        {% if search_query or status_filter %}
+                            <a href="{% url 'admin_payment_requests' %}" class="btn btn-outline-secondary mb-3">
+                                <i class="fas fa-times"></i> Clear Filters
+                            </a>
+                        {% endif %}
+                    </form>
+                </div>
+                <div class="col-lg-4 text-right">
+                    <div class="mb-3">
+                        <span class="badge badge-pill p-2 mr-1" style="background-color: #FF5050; color: white;">
+                            <i class="fas fa-hourglass-half"></i> Pending: 
+                            {{ grouped_requests.PENDING|length|default:"0" }}
+                        </span>
+                        <span class="badge badge-pill p-2" style="background-color: #FF5050; color: white;">
+                            <i class="fas fa-check-circle"></i> Today: 
+                            {{ grouped_requests.APPROVED|length|default:"0" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Requests Table -->
+            {% if grouped_requests %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Registration</th>
+                            <th>Date</th>
+                            <th>Amount</th>
+                            <th>Method</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for status, requests in grouped_requests.items %}
+                        {% for request in requests %}
+                        <tr>
+                            <td>{{ request.student.F_Name }} {{ request.student.L_Name }}</td>
+                            <td>{{ request.student.Registration_Number }}</td>
+                            <td>{{ request.request_date|date:"M d, Y H:i" }}</td>
+                            <td>Rs{{ request.amount }}</td>
+                            <td>{{ request.payment_method }}</td>
+                            <td>
+                                {% if request.status == 'PENDING' %}
+                                    <span class="badge rounded-pill" style="background-color: #FF5050; color: white;">
+                                        <i class="fas fa-hourglass-half"></i> Pending
+                                    </span>
+                                {% elif request.status == 'APPROVED' %}
+                                    <span class="badge rounded-pill" style="background-color: #5ACD84; color: white;">
+                                        <i class="fas fa-check-circle"></i> Approved
+                                    </span>
+                                {% elif request.status == 'REJECTED' %}
+                                    <span class="badge rounded-pill" style="background-color: #FF0000; color: white;">
+                                        <i class="fas fa-times-circle"></i> Rejected
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if request.status == 'PENDING' %}
+                                    <a href="{% url 'process_payment_request' request.id %}" class="btn btn-sm" style="background-color: #5ACD84; color: white;">
+                                        <i class="fas fa-edit"></i> Process
+                                    </a>
+                                {% else %}
+                                    <a href="{% url 'payment_request_details' request.id %}" class="btn btn-sm" style="background-color: #17A2B8; color: white;">
+                                        <i class="fas fa-eye"></i> View
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <h5>No payment requests found</h5>
+                <p>There are no payment requests matching your filter criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

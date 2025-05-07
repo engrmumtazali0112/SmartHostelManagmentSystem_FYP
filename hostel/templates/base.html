@@ -221,6 +221,10 @@
                             <a href="{% url 'mess_bill' %}" class="dropdown-item">
                                 <i class="fas fa-file-invoice-dollar"></i> Mess Bill
                             </a>
+                            <a href="{% url 'mess_account_book' %}" class="dropdown-item"> 
+                                <i class="fas fa-file-invoice-dollar"></i> Mess Account Book  
+                            </a>
+                            
                            
                         </div>
                     </div>
@@ -251,13 +255,16 @@
                         </a>
                         <div class="dropdown-menu">
                             <a href="{% url 'account_book' %}" class="dropdown-item">
-                                <i class="fas fa-wallet"></i> Account Book
+                                <i class="fas fa-wallet"></i>H Account Book
                             </a>
-                            <a href="{% url 'create_payment_request' %}" class="dropdown-item">
-                                <i class="fas fa-upload"></i> Submit Payment Request
+                            <a href="{% url 'add_payment' %}" class="dropdown-item">
+                                <i class="fas fa-upload"></i>H Add Payment
                             </a>
-                            <a href="{% url 'payment_request_history' %}" class="dropdown-item">
-                                <i class="fas fa-history"></i> Payment Request History
+                            <a href="{% url 'mess_account_book' %}" class="dropdown-item">
+                                <i class="fas fa-wallet"></i>Mess Account Book
+                            </a>
+                            <a href="{% url 'payment_request_form' %}" class="dropdown-item">
+                                <i class="fas fa-upload"></i>Mess Add Payment
                             </a>
                         </div>
                     </div>
@@ -318,41 +325,43 @@
                             {% endif %}
                         </a>
                         <div class="dropdown-menu">
-                            <a href="{% url 'fee_management' %}" class="dropdown-item">
+                            <a href="{% url 'account_book' %}" class="dropdown-item">
                                 <i class="fas fa-clipboard-list"></i> Hostel Payment
                             </a>
                             <a href="{% url 'admin_payment_requests' %}" class="dropdown-item">
-                                <i class="fas fa-check-circle"></i> Payment Requests
+                                <i class="fas fa-users"></i>Mess Payment Request
                             </a>
+                            
                         </div>
                     </div>
                     {% endif %} 
                     <!-- Staff Mess Management Dropdown -->
                     {% if user.is_staff %}
-                    <div class="sidebar-dropdown">
-                        <a href="#" class="sidebar-link dropdown-toggle">
-                            <i class="fas fa-utensils"></i> Mess Management <i class="fas fa-chevron-down"></i>
-                        </a>
-                        <div class="dropdown-menu">
-                            <a href="{% url 'mess_request' %}" class="dropdown-item">
-                                <i class="fas fa-clipboard-list"></i> Mess Request
+                        <div class="sidebar-dropdown">
+                            <a href="#" class="sidebar-link dropdown-toggle">
+                                <i class="fas fa-utensils"></i> Mess Management <i class="fas fa-chevron-down"></i>
                             </a>
-                            <a href="{% url 'admin_mess_management' %}" class="dropdown-item">
-                                <i class="fas fa-users"></i> Active Mess Memberships
-                            </a>
-                            <a href="{% url 'mess_menu' %}" class="dropdown-item">
-                                <i class="fas fa-clipboard-list"></i> Mess Menu
-                            </a>
-                            <a href="{% url 'add_mess_menu' %}" class="dropdown-item">
-                                <i class="fas fa-plus"></i> Add Mess Menu
-                            </a> <!-- Add this line for 'Add Mess Menu' -->
-                          
-                            <a href="{% url 'manage_attendance' %}" class="dropdown-item">
+                            <div class="dropdown-menu">
+                                <a href="{% url 'mess_request' %}" class="dropdown-item">
+                                    <i class="fas fa-clipboard-list"></i> Mess Request
+                                </a>
+                                <a href="{% url 'admin_mess_management' %}" class="dropdown-item">
+                                    <i class="fas fa-users"></i> Active Mess Memberships
+                                </a>
+                                <a href="{% url 'mess_menu' %}" class="dropdown-item">
+                                    <i class="fas fa-clipboard-list"></i> Mess Menu
+                                </a>
+                                <a href="{% url 'add_mess_menu' %}" class="dropdown-item">
+                                    <i class="fas fa-plus"></i> Add Mess Menu
+                                </a>
+                                <a href="{% url 'manage_attendance' %}" class="dropdown-item">
                                     <i class="fas fa-users"></i> View All Attendance
-                            </a>
+                                </a>
+                                
+                            </div>
                         </div>
-                    </div>
-                {% endif %}                           
+                    {% endif %}
+
                     <a href="{% url 'list_complaints' %}" class="sidebar-link">
                         <i class="fas fa-exclamation-circle"></i> Complaints
                         {% if unread_complaints > 0 %}

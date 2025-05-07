@@ -1,5 +1,7 @@
 {% extends 'base.html' %}
 
+{% block title %}Mess Membership Status{% endblock %}
+
 {% block content %}
 <style>
     /* Container Styling */
@@ -11,15 +13,20 @@
     /* Card Styling */
     .card {
         border-radius: 15px;
-        border: none;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        background-color: #fff;
+        transition: transform 0.3s ease;
+    }
+
+    .card:hover {
+        transform: translateY(-10px);
     }
 
     .card-header {
         background-color: #007bff;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        font-size: 1.25rem;
+        border-radius: 15px 15px 0 0;
+        font-size: 1.5rem;
+        padding: 15px 20px;
     }
 
     .card-header i {
@@ -29,9 +36,14 @@
     /* Alert Styling */
     .alert {
         border-radius: 10px;
-        padding: 15px;
+        padding: 12px 20px;
         font-size: 1rem;
-        margin-bottom: 20px;
+    }
+
+    .alert-success {
+        background-color: #d4edda;
+        color: #155724;
+        border-color: #c3e6cb;
     }
 
     .alert-info {
@@ -39,150 +51,171 @@
         color: #0c5460;
         border-color: #bee5eb;
     }
-    
-    .alert-success {
-        background-color: #d4edda;
-        color: #155724;
-        border-color: #c3e6cb;
-    }
-    
+
     .alert-warning {
         background-color: #fff3cd;
         color: #856404;
         border-color: #ffeeba;
     }
-    
+
     .alert-danger {
         background-color: #f8d7da;
         color: #721c24;
         border-color: #f5c6cb;
     }
 
-    /* Form Styling */
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-    
-    label {
-        font-weight: 600;
-        color: #495057;
-        margin-bottom: 0.5rem;
-        display: block;
-    }
-
-    .form-control {
-        border-radius: 10px;
-        border: 1px solid #ced4da;
-        padding: 12px;
-        font-size: 1rem;
-        background-color: #f8f9fa;
-        box-shadow: 0 0 5px rgba(0, 123, 255, 0.1);
-    }
-
     /* Button Styling */
-    .btn-primary {
-        background-color: #28a745;
-        border: none;
-        padding: 12px 24px;
-        font-size: 1rem;
+    .btn {
+        font-size: 1.1rem;
+        padding: 10px 20px;
         border-radius: 10px;
         transition: background-color 0.3s ease;
-        margin-top: 10px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        border: none;
     }
 
     .btn-primary:hover {
-        background-color: #218838;
+        background-color: #0056b3;
     }
 
-    /* Status Badge */
-    .status-badge {
-        display: inline-block;
-        padding: 5px 10px;
-        border-radius: 5px;
-        font-weight: 600;
-        margin-left: 10px;
+    /* Form Container */
+    .form-container {
+        margin-top: 30px;
     }
-    
-    .status-pending {
-        background-color: #ffc107;
-        color: #212529;
+
+    /* Form Input Styling */
+    .form-control {
+        border-radius: 10px;
+        font-size: 1rem;
+        padding: 12px 15px;
+        border: 1px solid #ced4da;
+        box-shadow: 0 0 8px rgba(0, 123, 255, 0.2);
+        transition: box-shadow 0.3s ease;
     }
-    
-    .status-approved {
-        background-color: #28a745;
-        color: white;
+
+    .form-control:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 10px rgba(0, 123, 255, 0.4);
     }
-    
-    .status-rejected {
-        background-color: #dc3545;
-        color: white;
+
+    /* Form Label Styling */
+    label {
+        font-weight: bold;
+        color: #495057;
     }
-    
-    .status-inactive {
-        background-color: #6c757d;
-        color: white;
+
+    /* Responsive Design for Form */
+    @media (max-width: 768px) {
+        .form-group {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .col-md-9 {
+            width: 100%;
+        }
+
+        .col-md-3 {
+            width: 100%;
+        }
     }
 </style>
 
 <div class="container mt-4">
-    <div class="card shadow">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} mb-4">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card shadow-lg border-0 rounded-3">
         <div class="card-header bg-primary text-white">
             <h4 class="mb-0"><i class="fas fa-utensils mr-2"></i>Mess Membership Status</h4>
         </div>
         <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-            
-            <div class="alert alert-{{ status_class }}">
-                <p><strong>Status: </strong>{{ status_message }}</p>
-            </div>
-            
-            {% if membership %}
-                <div class="form-group">
-                    <label>Student Name:</label>
-                    <input type="text" class="form-control" value="{{ membership.student.F_Name }} {{ membership.student.L_Name }}" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>Registration Number:</label>
-                    <input type="text" class="form-control" value="{{ membership.student.Registration_Number }}" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>Department:</label>
-                    <input type="text" class="form-control" value="{{ membership.department }}" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>Start Date:</label>
-                    <input type="text" class="form-control" value="{{ membership.start_date }}" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>End Date:</label>
-                    <input type="text" class="form-control" value="{{ membership.end_date }}" readonly>
-                </div>
-                
-                <div class="form-group">
-                    <label>Application Date:</label>
-                    <input type="text" class="form-control" value="{{ membership.date_applied|date:'F d, Y' }}" readonly>
-                </div>
-                
-                {% if not membership.approved %}
-                    <div class="text-center mt-4">
-                        <p class="text-info">Your application is pending approval. Please check back later.</p>
+            {% if mess_membership %}
+                <!-- Status information -->
+                <div class="status-card {% if status_class == 'success' %}bg-success-subtle{% elif status_class == 'warning' %}bg-warning-subtle{% elif status_class == 'danger' %}bg-danger-subtle{% endif %}">
+                    <div class="text-center">
+                        {% if status_class == 'success' %}
+                            <div class="status-icon text-success">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                        {% elif status_class == 'warning' %}
+                            <div class="status-icon text-warning">
+                                <i class="fas fa-exclamation-circle"></i>
+                            </div>
+                        {% elif status_class == 'danger' %}
+                            <div class="status-icon text-danger">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                        {% endif %}
+
+                        <h3 class="mb-3">{{ status_message }}</h3>
+
+                        <!-- Conditional action buttons based on status -->
+                        {% if mess_membership.approved and mess_membership.is_active %}
+                            <a href="{% url 'mess_attendance' %}" class="btn btn-success">
+                                <i class="fas fa-calendar-check me-2"></i>Mark Attendance
+                            </a>
+                        {% elif mess_membership.status == "Rejected" %}
+                            <a href="{% url 'apply_for_mess' %}" class="btn btn-primary">
+                                <i class="fas fa-file-signature me-2"></i>Apply Again
+                            </a>
+                        {% else %}
+                            <p class="text-muted mb-0">Please wait for admin approval before you can mark attendance.</p>
+                        {% endif %}
                     </div>
-                {% endif %}
+                </div>
+
+                <!-- Membership details -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Start Date:</label>
+                            <input type="text" class="form-control" value="{{ mess_membership.start_date }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>End Date:</label>
+                            <input type="text" class="form-control" value="{{ mess_membership.end_date }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Department:</label>
+                            <input type="text" class="form-control" value="{{ mess_membership.department }}" readonly>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label>Application Date:</label>
+                            <input type="text" class="form-control" value="{{ mess_membership.date_applied|date:'F d, Y' }}" readonly>
+                        </div>
+                    </div>
+                </div>
             {% else %}
+                <div class="alert alert-warning">
+                    <p>You haven't applied for mess membership yet. Please apply first.</p>
+                </div>
+
                 <div class="text-center mt-4">
-                    <p>You don't have an active mess membership.</p>
-                    <a href="{% url 'apply_for_mess' %}" class="btn btn-primary">Apply for Mess Membership</a>
+                    <a href="{% url 'apply_for_mess' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-file-signature me-2"></i>Apply for Mess Membership
+                    </a>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
+
 {% endblock %}

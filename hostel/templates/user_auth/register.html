@@ -8,10 +8,11 @@
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            height: 100vh;
+            min-height: 100vh;
             display: flex;
             align-items: center;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 0;
         }
 
         .register-container {
@@ -19,9 +20,10 @@
             border-radius: 20px;
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             padding: 40px;
-            max-width: 500px;
+            max-width: 600px;
             width: 100%;
             transition: all 0.3s ease;
+            margin-bottom: 40px;
         }
 
         .register-container:hover {
@@ -63,6 +65,7 @@
             border-radius: 30px;
             padding: 15px;
             border: 2px solid #e0e0e0;
+            margin-bottom: 15px;
         }
 
         .form-control:focus {
@@ -84,47 +87,137 @@
             background: linear-gradient(to right, #764ba2, #667eea);
             transform: scale(1.05);
         }
+
+        /* Additional styles for student fields */
+        .student-fields {
+            display: block;
+        }
+
+        .admin-notice {
+            display: none;
+            text-align: center;
+            padding: 15px;
+            margin-top: 20px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <div class="register-container">
                     <div class="register-header">
                         <h2>Create Your Account</h2>
                     </div>
                     
                     <div class="role-selection">
-                        <button class="role-btn active" id="userRole">User</button>
+                        <button class="role-btn active" id="userRole">Student</button>
                         <button class="role-btn" id="adminRole">Admin</button>
                     </div>
 
-                    <form method="POST">
+                    {% if messages %}
+                    <div class="messages">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                         <input type="hidden" name="registration_type" id="registrationType" value="user">
                         
-                        <div class="form-group mb-3">
-                            <input type="text" class="form-control" name="name" placeholder="Full Name" required>
+                        <!-- Basic Information -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="name" placeholder="Full Name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="email" class="form-control" name="email" placeholder="Email Address" required>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <input type="email" class="form-control" name="email" placeholder="Email Address" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" name="username" placeholder="Username" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="text" class="form-control student-field" name="registration_number" placeholder="Registration Number" required>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <input type="text" class="form-control" name="username" placeholder="Username" required>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <input type="password" class="form-control" name="confirm_password" placeholder="Confirm Password" required>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <input type="password" class="form-control" name="password" placeholder="Password" required>
+                        <!-- Student-specific fields -->
+                        <div id="studentFields" class="student-fields">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" name="department" placeholder="Department">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" name="contact_info" placeholder="Contact Number">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <input type="text" class="form-control" name="father_name" placeholder="Father's Name">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <textarea class="form-control" name="address" placeholder="Address" rows="3" style="border-radius: 15px;"></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="profile_picture" class="form-label ms-2">Profile Picture</label>
+                                        <input type="file" class="form-control" name="profile_picture" id="profile_picture">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
-                        <div class="form-group mb-3">
-                            <input type="password" class="form-control" name="confirm_password" placeholder="Confirm Password" required>
+                        <!-- Admin notice -->
+                        <div id="adminNotice" class="admin-notice">
+                            <p class="text-muted">You are registering as an admin. Only basic information is required.</p>
                         </div>
                         
-                        <button type="submit" class="btn btn-register w-100">Register</button>
+                        <button type="submit" class="btn btn-register w-100 mt-3">Register</button>
                     </form>
 
                     <div class="text-center mt-3">
@@ -140,18 +233,48 @@
             const userRoleBtn = document.getElementById('userRole');
             const adminRoleBtn = document.getElementById('adminRole');
             const registrationTypeInput = document.getElementById('registrationType');
+            const studentFields = document.getElementById('studentFields');
+            const adminNotice = document.getElementById('adminNotice');
+
+            // Function to toggle student/admin fields
+            function toggleFields(isStudent) {
+                if (isStudent) {
+                    studentFields.style.display = 'block';
+                    adminNotice.style.display = 'none';
+                    
+                    // Make student fields required
+                    const studentRequiredFields = document.querySelectorAll('.student-field');
+                    studentRequiredFields.forEach(field => {
+                        field.setAttribute('required', 'required');
+                    });
+                } else {
+                    studentFields.style.display = 'none';
+                    adminNotice.style.display = 'block';
+                    
+                    // Remove required attribute from student fields
+                    const studentRequiredFields = document.querySelectorAll('.student-field');
+                    studentRequiredFields.forEach(field => {
+                        field.removeAttribute('required');
+                    });
+                }
+            }
 
             userRoleBtn.addEventListener('click', function() {
                 userRoleBtn.classList.add('active');
                 adminRoleBtn.classList.remove('active');
                 registrationTypeInput.value = 'user';
+                toggleFields(true);
             });
 
             adminRoleBtn.addEventListener('click', function() {
                 adminRoleBtn.classList.add('active');
                 userRoleBtn.classList.remove('active');
                 registrationTypeInput.value = 'admin';
+                toggleFields(false);
             });
+            
+            // Initialize with student view
+            toggleFields(true);
         });
     </script>
 </body>

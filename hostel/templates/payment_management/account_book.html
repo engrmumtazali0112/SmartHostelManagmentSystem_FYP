@@ -133,6 +133,11 @@
         background-color: #dc3545;
         color: white;
     }
+    
+    .status-pending {
+        background-color: #ffc107;
+        color: black;
+    }
 
     /* Action Buttons */
     .btn-create-request {
@@ -147,6 +152,25 @@
 
     .btn-create-request:hover {
         background-color: #0056b3;
+    }
+    
+    /* Payment Button */
+    .btn-payment {
+        background-color: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+        display: inline-block;
+        margin-top: 15px;
+    }
+    
+    .btn-payment:hover {
+        background-color: #218838;
+        color: white;
+        text-decoration: none;
     }
 
     /* Back Button */
@@ -164,10 +188,28 @@
 
     .btn-back:hover {
         background-color: #5a6268;
+        color: white;
+        text-decoration: none;
     }
 
     .mb-4 {
         margin-bottom: 15px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 10px;
+        margin: 15px;
+    }
+
+    /* Success Message */
+    .payment-success {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 12px 15px;
+        border-radius: 5px;
+        margin: 15px;
+        border: 1px solid #c3e6cb;
     }
 
     /* Responsive Design */
@@ -184,6 +226,10 @@
         
         .student-details {
             grid-template-columns: 1fr;
+        }
+        
+        .action-buttons {
+            flex-direction: column;
         }
     }
 
@@ -208,21 +254,43 @@
     <div class="card">
         <div class="card-header">
             <h2>Account Book</h2>
-           
         </div>
 
-            <!-- Back Button -->
-            <div class="mb-4">
-                {% if user.is_staff or user.is_superuser %}
-                <a href="{% url 'fee_management' %}" class="btn-back">
-                    <i class="fas fa-arrow-left"></i> Back to Fee Management
-                </a>
-                {% else %}
-                <a href="{% url 'student_dashboard' %}" class="btn-back">
-                    <i class="fas fa-arrow-left"></i> Back to Dashboard
-                </a>
-                {% endif %}
+        <!-- Back Button and Actions -->
+        <div class="action-buttons">
+            {% if user.is_staff or user.is_superuser %}
+            <a href="{% url 'fee_management' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to Fee Management
+            </a>
+            {% else %}
+            <a href="{% url 'student_dashboard' %}" class="btn-back">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            {% if remaining_fee > 0 %}
+            <a href="{% url 'add_payment' %}" class="btn-payment">
+                <i class="fas fa-credit-card"></i> Make Online Payment
+            </a>
+            {% endif %}
+            {% endif %}
+        </div>
+
+        <!-- Messages -->
+        {% if messages %}
+        <div class="messages" style="padding: 0 15px;">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %}" role="alert">
+                {{ message }}
             </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Show success message if available -->
+        {% if success_message %}
+        <div class="payment-success">
+            {{ success_message }}
+        </div>
+        {% endif %}
 
         <div class="fee-summary">
             <div class="fee-card">
@@ -242,6 +310,37 @@
                 <div class="fee-card-value">Rs{{ remaining_fee }}.00</div>
             </div>
         </div>
+
+        <!-- Pending Online Payments Section -->
+        {% if stripe_payments %}
+        <div style="padding: 0 15px 15px 15px;">
+            <h4>Pending Online Payments</h4>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Payment ID</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for payment in stripe_payments %}
+                    <tr>
+                        <td>{{ payment.id }}</td>
+                        <td>Rs{{ payment.amount }}</td>
+                        <td>
+                            <span class="status-badge status-pending">
+                                {{ payment.status }}
+                            </span>
+                        </td>
+                        <td>{{ payment.created_at|date:"Y-m-d" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
 
         <div class="table-responsive">
             <table class="table">

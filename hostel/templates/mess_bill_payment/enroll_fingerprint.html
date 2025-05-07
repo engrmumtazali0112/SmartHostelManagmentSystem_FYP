@@ -1,0 +1,64 @@
+<!-- enroll_fingerprint.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Enroll Your Fingerprint</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <img src="{% static 'images/fingerprint-icon.png' %}" alt="Fingerprint" width="100" class="mb-3">
+                        <h5>Place your finger on the fingerprint scanner</h5>
+                        <p class="text-muted">Follow the instructions below to enroll your fingerprint for mess attendance</p>
+                    </div>
+
+                    <div class="alert alert-info">
+                        <ul>
+                            <li>Make sure your finger is clean and dry</li>
+                            <li>Place your finger flat on the scanner</li>
+                            <li>Hold still until the scanning is complete</li>
+                            <li>You may need to scan multiple times for accuracy</li>
+                        </ul>
+                    </div>
+
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="text-center">
+                            <div id="fingerprint-status" class="mb-3">
+                                <span class="badge bg-secondary">Ready to Scan</span>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="scan-button">
+                                <i class="fas fa-fingerprint"></i> Scan Fingerprint
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'mess_status' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Mess Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple animation for the fingerprint scan button
+    document.getElementById('scan-button').addEventListener('click', function(e) {
+        // Change status to 'Scanning'
+        document.getElementById('fingerprint-status').innerHTML = 
+            '<span class="badge bg-warning">Scanning...</span>';
+        
+        // Disable the button during "scanning"
+        this.disabled = true;
+        
+        // This doesn't prevent form submission - just adds a visual effect
+    });
+</script>
+{% endblock %}

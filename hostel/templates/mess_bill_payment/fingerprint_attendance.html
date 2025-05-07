@@ -1,0 +1,144 @@
+<!-- fingerprint_attendance.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Mark Attendance with Fingerprint</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <form method="POST">
+                        {% csrf_token %}
+                        <div class="form-group mb-4">
+                            <label for="meal_time"><strong>Select Meal:</strong></label>
+                            <select name="meal_time" id="meal_time" class="form-control" required>
+                                <option value="">-- Select Meal --</option>
+                                {% for meal in meal_times %}
+                                    <option value="{{ meal.code }}">{{ meal.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="text-center mb-4">
+                            <img src="{% static 'images/fingerprint-scan.png' %}" alt="Fingerprint" width="150" class="mb-3">
+                            <h5>Place student's finger on the scanner</h5>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <ol>
+                                <li>Select the meal from the dropdown above</li>
+                                <li>Ask the student to place their finger on the scanner</li>
+                                <li>Click "Scan Fingerprint" to mark attendance</li>
+                            </ol>
+                        </div>
+                        
+                        <div class="text-center">
+                            <div id="fingerprint-status" class="mb-3">
+                                <span class="badge bg-secondary">Ready to Scan</span>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-lg" id="scan-button">
+                                <i class="fas fa-fingerprint"></i> Scan Fingerprint
+                            </button>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'manage_attendance' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Attendance Management
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Recent Attendance Records -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h5>Recent Attendance Records</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Registration No</th>
+                                    <th>Meal</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in recent_records %}
+                                <tr>
+                                    <td>{{ record.student.F_Name }} {{ record.student.L_Name }}</td>
+                                    <td>{{ record.student.reg_no }}</td>
+                                    <td>{{ record.get_meal_time_display }}</td>
+                                    <td>{{ record.created_at|time }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No recent attendance records</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update the meal time selection based on the current time
+    function setDefaultMealTime() {
+        const now = new Date();
+        const hour = now.getHours();
+        const select = document.getElementById('meal_time');
+        
+        // Set default meal time based on current time
+        if (hour >= 6 && hour < 10) {
+            // Breakfast (6 AM - 10 AM)
+            select.value = 'BF';
+        } else if (hour >= 12 && hour < 15) {
+            // Lunch (12 PM - 3 PM)
+            select.value = 'LN';
+        } else if (hour >= 16 && hour < 18) {
+            // Evening Tea (4 PM - 6 PM)
+            select.value = 'ET';
+        } else if (hour >= 19 && hour < 22) {
+            // Dinner (7 PM - 10 PM)
+            select.value = 'DN';
+        }
+    }
+    
+    // Call the function when the page loads
+    window.onload = setDefaultMealTime;
+    
+    // Simple animation for the fingerprint scan button
+    document.getElementById('scan-button').addEventListener('click', function(e) {
+        if (!document.getElementById('meal_time').value) {
+            e.preventDefault();
+            alert('Please select a meal time first');
+            return;
+        }
+        
+        // Change status to 'Scanning'
+        document.getElementById('fingerprint-status').innerHTML = 
+            '<span class="badge bg-warning">Scanning...</span>';
+        
+        // Disable the button during "scanning"
+        this.disabled = true;
+    });
+</script>
+{% endblock %}

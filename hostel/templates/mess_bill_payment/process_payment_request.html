@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Process Payment Request{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="card-title">
+                        Process Payment Request
+                        <a href="{% url 'admin_payment_requests' %}" class="btn btn-secondary float-right">
+                            <i class="fas fa-arrow-left"></i> Back to Requests
+                        </a>
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                    <div class="messages mb-4">
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="row">
+                        <!-- Payment Request Details -->
+                        <div class="col-md-6">
+                            <div class="card mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">Payment Request Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered">
+                                            <tr>
+                                                <th width="40%">Request ID</th>
+                                                <td>{{ payment_request.id }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Student Name</th>
+                                                <td>{{ payment_request.student.F_Name }} {{ payment_request.student.L_Name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Registration Number</th>
+                                                <td>{{ payment_request.student.Registration_Number }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Hostel</th>
+                                                <td>{{ payment_request.student.Hostel_ID.Hostel_Name }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Amount</th>
+                                                <td>Rs. {{ payment_request.amount|floatformat:2 }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Request Date</th>
+                                                <td>{{ payment_request.request_date|date:"d M Y, h:i A" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Payment Method</th>
+                                                <td>{{ payment_request.payment_methods.get_payment_method_display }}</td>
+                                            </tr>
+                                            
+                                            <tr>
+                                                <th>Transaction ID</th>
+                                                <td>{{ payment_request.transaction_id|default:"-" }}</td>
+                                            </tr>
+                                            <tr>
+                                                <th>Status</th>
+                                                <td>
+                                                    <span class="badge 
+                                                        {% if payment_request.status == 'PENDING' %}badge-warning
+                                                        {% elif payment_request.status == 'APPROVED' %}badge-success
+                                                        {% elif payment_request.status == 'REJECTED' %}badge-danger
+                                                        {% else %}badge-secondary{% endif %}">
+                                                        {{ payment_request.get_status_display }}
+                                                    </span>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Milestone Days</th>
+                                                <td>{{ payment_request.milestone_days }} days</td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Associated Bills -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-info text-white">
+                                    <h5 class="card-title mb-0">Associated Bills</h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if payment_request.bills.all %}
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Bill ID</th>
+                                                    <th>Date</th>
+                                                    <th>Amount</th>
+                                                    <th>Status</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for bill in payment_request.bills.all %}
+                                                <tr>
+                                                    <td>{{ bill.id }}</td>
+                                                    <td>{{ bill.bill_date|date:"d M Y" }}</td>
+                                                    <td>Rs. {{ bill.amount_due|floatformat:2 }}</td>
+                                                    <td>
+                                                        {% if bill.paid_status %}
+                                                        <span class="badge badge-success">Paid</span>
+                                                        {% else %}
+                                                        <span class="badge badge-danger">Unpaid</span>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    {% else %}
+                                    <p class="text-muted">No bills associated with this payment request.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Payment Screenshot and Processing -->
+                        <div class="col-md-6">
+                            <!-- Payment Screenshot -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-primary text-white">
+                                    <h5 class="card-title mb-0">Payment Proof</h5>
+                                </div>
+                                <div class="card-body text-center">
+                                    {% if payment_request.payment_screenshot %}
+                                    <img src="{{ payment_request.payment_screenshot.url }}" class="img-fluid img-thumbnail" alt="Payment Screenshot">
+                                    <div class="mt-2">
+                                        <a href="{{ payment_request.payment_screenshot.url }}" class="btn btn-sm btn-info" target="_blank">
+                                            <i class="fas fa-search-plus"></i> View Full Size
+                                        </a>
+                                    </div>
+                                    {% else %}
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-exclamation-triangle"></i> No payment screenshot provided.
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <!-- Process Payment Request -->
+                            {% if payment_request.status == 'PENDING' %}
+                            <div class="card">
+                                <div class="card-header bg-warning text-dark">
+                                    <h5 class="card-title mb-0">Process Request</h5>
+                                </div>
+                                <div class="card-body">
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <div class="form-group">
+                                            <label for="admin_note">Admin Notes:</label>
+                                            <textarea name="admin_note" id="admin_note" class="form-control" rows="3"></textarea>
+                                            <small class="text-muted">Add any notes about this payment request</small>
+                                        </div>
+                                        
+                                        <div class="form-group d-flex justify-content-between">
+                                            <button type="submit" name="action" value="approve" class="btn btn-success">
+                                                <i class="fas fa-check"></i> Approve Payment
+                                            </button>
+                                            <button type="submit" name="action" value="reject" class="btn btn-danger">
+                                                <i class="fas fa-times"></i> Reject Payment
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="card">
+                                <div class="card-header {% if payment_request.status == 'APPROVED' %}bg-success{% else %}bg-danger{% endif %} text-white">
+                                    <h5 class="card-title mb-0">Request {{ payment_request.get_status_display }}</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label>Processed Date:</label>
+                                        <p>{{ payment_request.processed_date|date:"d M Y, h:i A"|default:"Not processed yet" }}</p>
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Admin Notes:</label>
+                                        <div class="p-3 bg-light rounded">
+                                            {{ payment_request.admin_note|linebreaks|default:"No notes provided." }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

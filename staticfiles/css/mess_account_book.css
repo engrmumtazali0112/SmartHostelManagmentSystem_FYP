@@ -1,0 +1,250 @@
+/* Custom Styling for Mess Account Book Page */
+.card {
+    border-radius: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    border: none;
+    margin-bottom: 25px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+    border-radius: 15px 15px 0 0 !important;
+    padding: 1.2rem;
+}
+
+.card-header h3 {
+    font-weight: 600;
+}
+
+.container {
+    padding: 30px 15px;
+}
+
+.summary-card {
+    border-radius: 15px;
+    overflow: hidden;
+    height: 100%;
+}
+
+.bg-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%) !important;
+}
+
+.bg-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%) !important;
+}
+
+.bg-danger {
+    background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%) !important;
+}
+
+.bg-info {
+    background: linear-gradient(135deg, #36b9cc 0%, #258391 100%) !important;
+}
+
+.display-4 {
+    font-weight: 700;
+    font-size: 2.5rem;
+}
+
+.nav-tabs {
+    border-bottom: 2px solid #e3e6f0;
+    margin-bottom: 20px;
+}
+
+.nav-tabs .nav-item {
+    margin-bottom: -2px;
+}
+
+.nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #6e707e;
+    font-weight: 600;
+    padding: 0.8rem 1.2rem;
+}
+
+.nav-tabs .nav-link.active {
+    color: #4e73df;
+    border-bottom: 2px solid #4e73df;
+    background-color: transparent;
+}
+
+.nav-tabs .nav-link:hover {
+    border-color: transparent;
+    border-bottom: 2px solid #c8cbcf;
+}
+
+.nav-tabs .nav-link i {
+    margin-right: 8px;
+}
+
+/* Table */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+}
+
+.table thead th {
+    background-color: #f8f9fc;
+    color: #5a5c69;
+    border: 1px solid #e3e6f0;
+    font-weight: 600;
+}
+
+.table tbody td {
+    border: 1px solid #e3e6f0;
+    vertical-align: middle;
+    padding: 1rem;
+}
+
+.table thead th, .table tbody td {
+    text-align: center;
+}
+
+.table tfoot th {
+    font-weight: 600;
+    background-color: #f8f9fc;
+}
+
+.table tbody tr:hover {
+    background-color: #f8f9fc;
+}
+
+.table td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-top: 1px solid #e3e6f0;
+}
+
+.table tfoot {
+    font-weight: 600;
+}
+
+.badge {
+    padding: 7px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border-radius: 50px;
+}
+
+.badge-success {
+    background: linear-gradient(135deg, #1cc88a 0%, #13855c 100%);
+}
+
+.badge-danger {
+    background: linear-gradient(135deg, #e74a3b 0%, #be2617 100%);
+}
+
+.badge-warning {
+    background: linear-gradient(135deg, #f6c23e 0%, #dda20a 100%);
+    color: #fff;
+}
+
+.btn {
+    border-radius: 50px;
+    padding: 10px 25px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #224abe 0%, #1a3a94 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(78, 115, 223, 0.4);
+}
+
+.btn i {
+    margin-right: 8px;
+}
+
+/* Animation for summary cards */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 20px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.summary-row .col-md-4:nth-child(1) .card {
+    animation: fadeInUp 0.4s ease-out 0.1s both;
+}
+
+.summary-row .col-md-4:nth-child(2) .card {
+    animation: fadeInUp 0.4s ease-out 0.2s both;
+}
+
+.summary-row .col-md-4:nth-child(3) .card {
+    animation: fadeInUp 0.4s ease-out 0.3s both;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .display-4 {
+        font-size: 2rem;
+    }
+
+    .card-header h3 {
+        font-size: 1.25rem;
+    }
+
+    .card-header span {
+        display: block;
+        float: none !important;
+        margin-top: 10px;
+        font-size: 0.9rem;
+    }
+
+    .table thead {
+        display: none;
+    }
+
+    .table, .table tbody, .table tr, .table td {
+        display: block;
+        width: 100%;
+    }
+
+    .table tr {
+        margin-bottom: 15px;
+        border: 1px solid #e3e6f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .table td {
+        text-align: right;
+        padding-left: 50%;
+        position: relative;
+        border-top: none;
+        border-bottom: 1px solid #e3e6f0;
+    }
+
+    .table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 15px;
+        width: 45%;
+        padding-right: 10px;
+        text-align: left;
+        font-weight: 600;
+    }
+
+    .table td:last-child {
+        border-bottom: none;
+    }
+}

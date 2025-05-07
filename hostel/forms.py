@@ -1,7 +1,6 @@
 from django import forms
 from .models import MessMembership, MessAttendance
 from django import forms
-from .models import PaymentRequest
 
 from django import forms
 from .models import ShowcaseNotice, Student
@@ -59,30 +58,3 @@ class MessAttendanceForm(forms.ModelForm):
         model = MessAttendance
         fields = ['is_present']  # Only the attendance status is needed for the form
 
-# ==========================
-# Payment Request Form
-# ==========================
-
-class PaymentRequestForm(forms.ModelForm):
-    class Meta:
-        model = PaymentRequest
-        fields = [
-            'amount', 
-            'bank_name', 
-            'transaction_id', 
-            'transaction_date', 
-            'payment_mode', 
-            'proof_document'
-        ]
-        # Custom widget to use 'datetime-local' input for transaction date
-        widgets = {
-            'transaction_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
-        }
-
-    # Custom validation to ensure the transaction ID is unique
-    def clean_transaction_id(self):
-        transaction_id = self.cleaned_data['transaction_id']
-        # Check if the transaction ID already exists in the database
-        if PaymentRequest.objects.filter(transaction_id=transaction_id).exists():
-            raise forms.ValidationError("This transaction ID has already been used.")
-        return transaction_id

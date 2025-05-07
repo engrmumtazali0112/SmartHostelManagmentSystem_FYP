@@ -10,7 +10,7 @@ from hostel.models import Student  # Assuming the Student model is in the studen
 from .models import (
     Hostel, Room, Admin, Student, Visitor, Complaint, 
     Payment, NoticeBoard, MessMembership, MessAttendance,
-    MessMenu, MessBill, FaceDetectionRecord, PaymentRequest, VisitorRequest
+    MessMenu, MessBill, VisitorRequest
 )
 
 # ==========================
@@ -41,18 +41,23 @@ class MessMenuAdmin(admin.ModelAdmin):
 # ==========================
 # Mess Bill Admin
 # ==========================
-@admin.register(MessBill)
+from django.contrib import admin
+from .models import MessBill
+
 class MessBillAdmin(admin.ModelAdmin):
-    list_display = ['student', 'bill_date', 'amount_due', 'paid_status', 'paid_amount', 'remaining_due']
-    list_filter = ['bill_date', 'paid_status']
-    search_fields = ['student__F_Name', 'student__L_Name']
+    list_display = ('student', 'bill_date', 'bill_month', 'bill_year', 'total_amount', 'amount_paid', 'amount_due', 'paid_status')
+
+    def amount_paid(self, obj):
+        return obj.amount_paid()
+
+    def amount_due(self, obj):
+        return obj.amount_due()
+
+admin.site.register(MessBill, MessBillAdmin)
 
 # ==========================
 # Hostel Admin
 # ==========================
-from django.contrib import admin
-from .models import Hostel
-
 @admin.register(Hostel)
 class HostelAdmin(admin.ModelAdmin):
     # List display should reference attributes correctly from the model
@@ -123,14 +128,6 @@ class PaymentAdmin(admin.ModelAdmin):
     list_filter = ('Fee_Status', 'Payment_Mode', 'Payment_Date')  # Changed 'status' to 'Fee_Status'
     search_fields = ('Student_ID__F_Name', 'Student_ID__L_Name', 'Fee_Type', 'Receipt_Number')
 
-
-
-# ==========================
-# Face Detection Record Admin
-# ==========================
-@admin.register(FaceDetectionRecord)
-class FaceDetectionRecordAdmin(admin.ModelAdmin):
-    list_display = ['student', 'detected_at', 'image_url']  # Correct list_display
 
 # ==========================
 # Visitor Admin

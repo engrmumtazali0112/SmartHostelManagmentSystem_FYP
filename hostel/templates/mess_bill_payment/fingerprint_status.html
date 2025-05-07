@@ -1,0 +1,68 @@
+<!-- fingerprint_status.html -->
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4>Your Fingerprint Status</h4>
+                </div>
+                <div class="card-body">
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                    
+                    <div class="text-center mb-4">
+                        <img src="{% static 'images/fingerprint-icon.png' %}" alt="Fingerprint" width="100" class="mb-3">
+                    </div>
+                    
+                    {% if not has_membership %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle"></i> You do not have an active mess membership. Please apply for mess membership first.
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'apply_for_mess' %}" class="btn btn-primary">
+                                <i class="fas fa-plus-circle"></i> Apply for Mess Membership
+                            </a>
+                        </div>
+                    {% elif not fingerprint_enrolled %}
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> You have not enrolled your fingerprint yet. Enrolling your fingerprint will allow you to use the fingerprint scanner for mess attendance.
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'enroll_fingerprint' %}" class="btn btn-primary">
+                                <i class="fas fa-fingerprint"></i> Enroll Your Fingerprint
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle"></i> Your fingerprint is enrolled and active.
+                        </div>
+                        <div class="card-text">
+                            <p><strong>Enrollment Date:</strong> {{ enrollment_date|date:"F d, Y" }}</p>
+                            <p>You can now use the fingerprint scanner to mark your attendance for meals.</p>
+                        </div>
+                        <div class="text-center mt-4">
+                            <a href="{% url 'enroll_fingerprint' %}" class="btn btn-outline-primary">
+                                <i class="fas fa-sync"></i> Re-enroll Fingerprint
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'mess_status' %}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Mess Status
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

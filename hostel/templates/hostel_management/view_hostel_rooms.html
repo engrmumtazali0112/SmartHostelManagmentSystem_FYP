@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ hostel.Hostel_Name }} - Rooms{% endblock %}
+
+{% block content %}
+<div class="bg-gray-50 min-h-screen py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header with Hostel Info -->
+        <div class="bg-white shadow rounded-lg mb-6 overflow-hidden">
+            <div class="bg-indigo-600 px-6 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-white">{{ hostel.Hostel_Name }}</h1>
+                    <a href="{% url 'list_hostels' %}" class="inline-flex items-center px-3 py-1.5 bg-white text-indigo-700 rounded-md hover:bg-indigo-50 text-sm font-medium transition-colors duration-150">
+                        <svg class="-ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                        </svg>
+                        Back to Hostels
+                    </a>
+                </div>
+            </div>
+            <div class="px-6 py-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+                        <span class="block text-sm font-medium text-gray-500">Total Rooms</span>
+                        <p class="text-2xl font-bold text-indigo-600">{{ hostel.No_Of_Rooms }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+                        <span class="block text-sm font-medium text-gray-500">Total Students</span>
+                        <p class="text-2xl font-bold text-indigo-600">{{ hostel.No_Of_Students }}</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200 text-center">
+                        <span class="block text-sm font-medium text-gray-500">Occupancy Rate</span>
+                        <p class="text-2xl font-bold text-indigo-600">
+                            {% if hostel.capacity > 0 %}
+                                {{ hostel.occupancy_rate|floatformat:0 }}%
+                            {% else %}
+                                0%
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Bar -->
+        <div class="flex justify-between items-center mb-6">
+            <div class="flex space-x-2">
+                <form method="GET" class="flex">
+                    <input type="text" name="search" placeholder="Search rooms..." 
+                           class="px-4 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                           value="{{ search_query }}">
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white rounded-r-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Search
+                    </button>
+                </form>
+                <div class="relative">
+                    <select id="room-type-filter" name="room_type" 
+                            class="block w-full px-4 py-2 pr-10 bg-white border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        <option value="">All Room Types</option>
+                        {% for i in "12345678910" %}
+                          <option value="{{ i }}-Seater" {% if selected_room_type == i|stringformat:"s" %}selected{% endif %}>{{ i }}-Seater</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-2">
+                {% if has_no_rooms %}
+                <a href="{% url 'view_hostel_rooms' hostel.Hostel_ID %}?generate_rooms=true" 
+                   class="inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                    Auto-Generate Rooms
+                </a>
+                {% endif %}
+                <a href="{% url 'add_room' %}?hostel={{ hostel.Hostel_ID }}" 
+                   class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out">
+                    Add Room
+                </a>
+            </div>
+        </div>
+
+        <!-- Rooms List -->
+        <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Room No</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Capacity</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Remaining</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Students</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        {% for room in rooms %}
+                        <tr class="hover:bg-gray-50 transition-colors duration-150 {% if search_query and search_query in room.Room_No or search_query in room.Room_Type or search_query in room.Location %}bg-indigo-50{% endif %}" data-room-type="{{ room.Room_Type }}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ room.Room_No }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-indigo-100 text-indigo-800">
+                                    {{ room.Room_Type }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ room.Capacity }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-3 py-2 inline-flex text-sm leading-5 font-semibold rounded-md shadow-sm border
+                                    {% if room.remaining_capacity == 0 %}
+                                    bg-red-200 text-red-800 border-red-300
+                                    {% elif room.remaining_capacity <= 2 %}
+                                    bg-yellow-200 text-yellow-800 border-yellow-300
+                                    {% else %}
+                                    bg-green-200 text-green-800 border-green-300
+                                    {% endif %}">
+                                    {{ room.remaining_capacity }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ room.Location }}</td>
+                            <td class="px-6 py-4 text-sm text-gray-500">
+                                <div class="max-h-20 overflow-y-auto">
+                                    {% for student in room.allocated_students %}
+                                    <div class="mb-1 border-l-2 border-indigo-400 pl-2">
+                                        <div class="font-medium text-gray-700">{{ student.F_Name }} {{ student.L_Name }}</div>
+                                        <div class="text-xs text-gray-500">{{ student.Department }}</div>
+                                    </div>
+                                    {% empty %}
+                                    <span class="text-gray-400 italic">No students allocated</span>
+                                    {% endfor %}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <a href="{% url 'edit_room' room.Room_ID %}" class="text-blue-600 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-3 py-1 rounded-md transition-colors duration-150">Edit</a>
+                                <form action="{% url 'delete_room' room.Room_ID %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 hover:bg-red-100 px-3 py-1 rounded-md transition-colors duration-150"
+                                            onclick="return confirm('Are you sure you want to delete this room?')">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="px-6 py-10 text-center text-sm text-gray-500">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                    </svg>
+                                    <p class="mt-2">No rooms found for this hostel.</p>
+                                    {% if search_query %}
+                                    <p class="mt-1 text-xs">Try adjusting your search criteria.</p>
+                                    {% endif %}
+                                    {% if has_no_rooms %}
+                                    <a href="{% url 'view_hostel_rooms' hostel.Hostel_ID %}?generate_rooms=true" 
+                                       class="mt-4 inline-flex items-center px-4 py-2 bg-green-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out">
+                                        Generate Rooms Automatically
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
