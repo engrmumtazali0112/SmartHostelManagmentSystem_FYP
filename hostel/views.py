@@ -2429,74 +2429,87 @@ def view_student_showcase_notice(request, notice_id):
 # Admin Mess Management System Active Memeber , Reject Application, Pending Application
 # ===========================
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.utils import timezone
+from datetime import datetime, date
+from base64 import b64decode
+import base64
+
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.utils import timezone
+from datetime import datetime, date
+from base64 import b64decode
+import base64
+
 @login_required
 def mess_status(request):
     try:
-        # Get the mess membership status for the logged-in student
         mess_membership = MessMembership.objects.get(student=request.user.student)
-
-        # Check if the mess membership is approved, rejected, or still pending
-        if mess_membership.approved:
-            status_message = "Your application has been approved!"
+        
+        if mess_membership.approved and mess_membership.is_active:
+            status_message = "Your application has been approved and is active!"
             status_class = "success"
+        elif mess_membership.approved and not mess_membership.is_active:
+            status_message = "Your application has been approved but is currently inactive. You can apply again to reactivate."
+            status_class = "warning"
         elif mess_membership.status == "Rejected":
-            status_message = "Your application has been rejected."
+            status_message = "Your application has been rejected. You can apply again."
             status_class = "danger"
         else:
             status_message = "Your application is still pending. Please wait for admin approval."
             status_class = "warning"
 
-        # Pass the status message and mess membership data to the template
         return render(request, 'mess_management/mess_status.html', {
             'status_message': status_message,
             'status_class': status_class,
-            'mess_membership': mess_membership
+            'mess_membership': mess_membership,
         })
 
     except MessMembership.DoesNotExist:
-        # If the student has not applied for mess, inform them and redirect to the apply page
         messages.warning(request, "You have not applied for mess yet. Please apply first.")
-        return redirect('apply_for_mess')  # Redirect to the apply for mess page
+        return redirect('apply_for_mess')
 
 @login_required
 def apply_for_mess(request):
+    # Check for existing ACTIVE membership only
     try:
-        # Check if the student already has an approved and active membership
-        existing_membership = MessMembership.objects.filter(
+        existing_active_membership = MessMembership.objects.filter(
             student=request.user.student, 
             approved=True, 
             is_active=True
         ).first()
-        
-        # Check for fingerprint enrollment status
-        try:
-            fingerprint = Fingerprint.objects.get(student=request.user.student)
-            fingerprint_enrolled = True
-        except Fingerprint.DoesNotExist:
-            fingerprint_enrolled = False
-        
-        if existing_membership:
+
+        if existing_active_membership:
             messages.info(request, "You already have an active mess membership.")
-            return render(request, 'mess_management/mess_apply.html', {
-                'mess_membership': existing_membership,
-                'fingerprint_enrolled': fingerprint_enrolled
-            })
+            return redirect('mess_status')
     except Exception:
         pass
 
-    # Check if the student has already applied but their application is pending
+    # Check for fingerprint enrollment
+    try:
+        fingerprint = Fingerprint.objects.get(student=request.user.student)
+        fingerprint_enrolled = True
+    except Fingerprint.DoesNotExist:
+        fingerprint_enrolled = False
+
+    # Only check for PENDING applications (allow reapplication if rejected or inactive)
     try:
         pending_membership = MessMembership.objects.get(
             student=request.user.student, 
             approved=False, 
-            is_active=False
+            status="Pending"
         )
         messages.info(request, "You have already applied for mess membership. Please wait for admin approval.")
         return redirect('mess_status')
     except MessMembership.DoesNotExist:
         pass
 
-    # If no active membership exists and no pending application, allow them to apply
     if request.method == 'POST':
         start_date = request.POST.get('start_date')
         end_date = request.POST.get('end_date')
@@ -2510,48 +2523,110 @@ def apply_for_mess(request):
 
             if start_date >= end_date:
                 messages.error(request, "End date must be after start date.")
-                return render(request, 'mess_management/mess_apply.html')
+                return render(request, 'mess_management/mess_apply.html', {
+                    'fingerprint_enrolled': fingerprint_enrolled
+                })
 
             if start_date < date.today():
                 messages.error(request, "Start date cannot be in the past.")
-                return render(request, 'mess_management/mess_apply.html')
+                return render(request, 'mess_management/mess_apply.html', {
+                    'fingerprint_enrolled': fingerprint_enrolled
+                })
         except ValueError:
             messages.error(request, "Invalid date format.")
-            return render(request, 'mess_management/mess_apply.html')
-        
-        # Create a new fingerprint record or update existing one
+            return render(request, 'mess_management/mess_apply.html', {
+                'fingerprint_enrolled': fingerprint_enrolled
+            })
+
         if fingerprint_data:
             try:
+                # Convert fingerprint data to binary format
+                if isinstance(fingerprint_data, str):
+                    try:
+                        fingerprint_bytes = base64.b64decode(fingerprint_data)
+                    except:
+                        fingerprint_bytes = fingerprint_data.encode('utf-8')
+                else:
+                    fingerprint_bytes = fingerprint_data
+
+                # Create or update fingerprint record
                 fingerprint, created = Fingerprint.objects.update_or_create(
                     student=request.user.student,
-                    defaults={'fingerprint_template': fingerprint_data}
+                    defaults={'fingerprint_template': fingerprint_bytes}
                 )
-                
-                # Create a new membership application with status "Pending"
-                membership = MessMembership(
-                    student=request.user.student,
-                    start_date=start_date,
-                    end_date=end_date,
-                    department=department,
-                    is_active=False,
-                    approved=False,
-                    status="Pending",
-                    fingerprint=fingerprint  # Associate the fingerprint with the mess membership
-                )
-                membership.save()
-                
-                messages.success(request, "Mess membership application with fingerprint submitted successfully. Please wait for approval.")
+
+                # Check if there's an existing rejected OR inactive membership to update
+                try:
+                    existing_membership = MessMembership.objects.filter(
+                        student=request.user.student
+                    ).filter(
+                        Q(status="Rejected") | Q(approved=True, is_active=False)
+                    ).first()
+                    
+                    if existing_membership:
+                        # Update the existing rejected/inactive application
+                        existing_membership.start_date = start_date
+                        existing_membership.end_date = end_date
+                        existing_membership.department = department
+                        existing_membership.is_active = False
+                        existing_membership.approved = False
+                        existing_membership.status = "Pending"
+                        existing_membership.date_applied = timezone.now()
+                        existing_membership.fingerprint = fingerprint
+                        existing_membership.save()
+                        
+                        messages.success(request, "Your mess membership application has been resubmitted successfully. Please wait for approval.")
+                    else:
+                        # Create new membership application
+                        membership = MessMembership(
+                            student=request.user.student,
+                            start_date=start_date,
+                            end_date=end_date,
+                            department=department,
+                            is_active=False,
+                            approved=False,
+                            status="Pending",
+                            fingerprint=fingerprint
+                        )
+                        membership.save()
+                        
+                        messages.success(request, "Mess membership application with fingerprint submitted successfully. Please wait for approval.")
+
+                except Exception as e:
+                    # If there's any issue with updating, create new application
+                    membership = MessMembership(
+                        student=request.user.student,
+                        start_date=start_date,
+                        end_date=end_date,
+                        department=department,
+                        is_active=False,
+                        approved=False,
+                        status="Pending",
+                        fingerprint=fingerprint
+                    )
+                    membership.save()
+                    
+                    messages.success(request, "Mess membership application with fingerprint submitted successfully. Please wait for approval.")
+
                 return redirect('mess_status')
+                
             except Exception as e:
                 messages.error(request, f"Error submitting application: {str(e)}")
+                return render(request, 'mess_management/mess_apply.html', {
+                    'fingerprint_enrolled': fingerprint_enrolled
+                })
         else:
             messages.error(request, "Fingerprint scan is required for mess application. Please scan your fingerprint.")
-            return render(request, 'mess_management/mess_apply.html')
+            return render(request, 'mess_management/mess_apply.html', {
+                'fingerprint_enrolled': fingerprint_enrolled
+            })
 
-    return render(request, 'mess_management/mess_apply.html')
+    # Handle GET request - render the form
+    return render(request, 'mess_management/mess_apply.html', {
+        'fingerprint_enrolled': fingerprint_enrolled
+    })
 
-
-
+# Admin views remain the same but with improved error handling
 @staff_member_required
 def admin_mess_management(request):
     # Fetch different categories of memberships
@@ -2560,7 +2635,7 @@ def admin_mess_management(request):
     rejected_memberships = MessMembership.objects.filter(status="Rejected").order_by('-date_applied')
     pending_requests = MessMembership.objects.filter(approved=False, status="Pending").order_by('-date_applied')
     
-    # Handle activation of inactive memberships
+    # Handle activation/deactivation of memberships
     if request.method == 'POST':
         request_id = request.POST.get('request_id')
         action = request.POST.get('action')
@@ -2588,10 +2663,58 @@ def admin_mess_management(request):
         'inactive_memberships': inactive_memberships,
         'rejected_memberships': rejected_memberships,
         'pending_requests': pending_requests,
-        'active_tab': 'active'  # Default active tab
+        'active_tab': 'active'
     }
     
     return render(request, 'mess_management/admin_mess_management.html', context)
+
+@staff_member_required
+def mess_request(request):
+    # Fetch pending requests
+    pending_requests = MessMembership.objects.filter(approved=False, status="Pending").order_by('-date_applied')
+    
+    if request.method == 'POST':
+        request_id = request.POST.get('request_id')
+        action = request.POST.get('action')
+        
+        try:
+            mess_request = MessMembership.objects.get(id=request_id)
+            
+            if action == 'approve':
+                mess_request.approved = True
+                mess_request.is_active = True
+                mess_request.status = "Approved"
+                mess_request.save()
+                messages.success(request, f"Membership for {mess_request.student} approved successfully!")
+            
+            elif action == 'reject':
+                mess_request.approved = False
+                mess_request.is_active = False
+                mess_request.status = "Rejected"
+                mess_request.save()
+                messages.success(request, f"Membership request for {mess_request.student} rejected successfully!")
+            
+            elif action == 'deactivate':
+                mess_request.is_active = False
+                mess_request.save()
+                messages.success(request, f"Membership for {mess_request.student} deactivated successfully!")
+            
+            elif action == 'activate':
+                mess_request.is_active = True
+                mess_request.save()
+                messages.success(request, f"Membership for {mess_request.student} activated successfully!")
+        
+        except MessMembership.DoesNotExist:
+            messages.error(request, "Request not found!")
+        
+        return redirect('mess_request')
+    
+    context = {
+        'pending_requests': pending_requests,
+        'active_tab': 'pending'
+    }
+    
+    return render(request, 'mess_management/mess_request.html', context)
 
 @staff_member_required
 def inactive_memberships(request):
@@ -2647,54 +2770,6 @@ def rejected_applications(request):
     
     return render(request, 'mess_management/rejected_applications.html', context)
 
-
-@staff_member_required
-def mess_request(request):
-    # Fetch pending requests
-    pending_requests = MessMembership.objects.filter(approved=False, status="Pending").order_by('-date_applied')
-    
-    if request.method == 'POST':
-        request_id = request.POST.get('request_id')
-        action = request.POST.get('action')
-        
-        try:
-            mess_request = MessMembership.objects.get(id=request_id)
-            
-            if action == 'approve':
-                mess_request.approved = True
-                mess_request.is_active = True
-                mess_request.status = "Approved"
-                mess_request.save()
-                messages.success(request, f"Membership for {mess_request.student} approved successfully!")
-            
-            elif action == 'reject':
-                mess_request.status = "Rejected"
-                mess_request.save()
-                messages.success(request, f"Membership request for {mess_request.student} rejected successfully!")
-            
-            elif action == 'deactivate':
-                mess_request.is_active = False
-                mess_request.save()
-                messages.success(request, f"Membership for {mess_request.student} deactivated successfully!")
-            
-            elif action == 'activate':
-                mess_request.is_active = True
-                mess_request.save()
-                messages.success(request, f"Membership for {mess_request.student} activated successfully!")
-        
-        except MessMembership.DoesNotExist:
-            messages.error(request, "Request not found!")
-        
-        return redirect('mess_request')
-    
-    context = {
-        'pending_requests': pending_requests,
-        'active_tab': 'pending'  # Mark this tab as active
-    }
-    
-    return render(request, 'mess_management/mess_request.html', context)
-
-
 # ===========================
 # Mess Attandance Management System
 # Admin Manage Attandance 
@@ -2703,18 +2778,55 @@ def mess_request(request):
 # ===========================
 
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Q
+from datetime import datetime, timedelta
+
 @staff_member_required
 def manage_attendance(request):
-    # Filter by date if provided
+    # Get search parameters
     date_filter = request.GET.get('date')
+    student_search = request.GET.get('student', '').strip()
+    meal_filter = request.GET.get('meal')
+    
+    # Base queryset
+    base_query = MessAttendance.objects.all()
+    
+    # Apply date filter
     if date_filter:
-        # Handle filtering of records by date
-        breakfast_records = MessAttendance.objects.filter(meal_time='BF', date=date_filter).order_by('-date')
-        lunch_records = MessAttendance.objects.filter(meal_time='LN', date=date_filter).order_by('-date')
-        tea_break_records = MessAttendance.objects.filter(meal_time='ET', date=date_filter).order_by('-date')
-        dinner_records = MessAttendance.objects.filter(meal_time='DN', date=date_filter).order_by('-date')
-
-        # Set records to None if no records exist for the given date
+        try:
+            filter_date = datetime.strptime(date_filter, '%Y-%m-%d').date()
+            base_query = base_query.filter(date=filter_date)
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD format.")
+    
+    # Apply student search filter
+    if student_search:
+        base_query = base_query.filter(
+            Q(student__user__first_name__icontains=student_search) |
+            Q(student__user__last_name__icontains=student_search) |
+            Q(student__user__username__icontains=student_search) |
+            Q(student__student_id__icontains=student_search)
+        )
+    
+    # Filter records by meal type
+    if meal_filter:
+        breakfast_records = base_query.filter(meal_time='BF').order_by('-date', '-id') if meal_filter == 'BF' else None
+        lunch_records = base_query.filter(meal_time='LN').order_by('-date', '-id') if meal_filter == 'LN' else None
+        tea_break_records = base_query.filter(meal_time='ET').order_by('-date', '-id') if meal_filter == 'ET' else None
+        dinner_records = base_query.filter(meal_time='DN').order_by('-date', '-id') if meal_filter == 'DN' else None
+    else:
+        # Get all meal records with applied filters
+        breakfast_records = base_query.filter(meal_time='BF').order_by('-date', '-id')
+        lunch_records = base_query.filter(meal_time='LN').order_by('-date', '-id')
+        tea_break_records = base_query.filter(meal_time='ET').order_by('-date', '-id')
+        dinner_records = base_query.filter(meal_time='DN').order_by('-date', '-id')
+        
+        # Set to None if no records exist
         if not breakfast_records.exists():
             breakfast_records = None
         if not lunch_records.exists():
@@ -2723,18 +2835,25 @@ def manage_attendance(request):
             tea_break_records = None
         if not dinner_records.exists():
             dinner_records = None
-    else:
-        # Fetch all attendance records for each meal
-        breakfast_records = MessAttendance.objects.filter(meal_time='BF').order_by('-date')
-        lunch_records = MessAttendance.objects.filter(meal_time='LN').order_by('-date')
-        tea_break_records = MessAttendance.objects.filter(meal_time='ET').order_by('-date')
-        dinner_records = MessAttendance.objects.filter(meal_time='DN').order_by('-date')
+
+    # Meal choices for dropdown
+    meal_choices = [
+        ('', 'All Meals'),
+        ('BF', 'Breakfast'),
+        ('LN', 'Lunch'),
+        ('ET', 'Evening Tea'),
+        ('DN', 'Dinner')
+    ]
 
     context = {
         'breakfast_records': breakfast_records,
         'lunch_records': lunch_records,
         'tea_break_records': tea_break_records,
-        'dinner_records': dinner_records
+        'dinner_records': dinner_records,
+        'date_filter': date_filter,
+        'student_search': student_search,
+        'meal_filter': meal_filter,
+        'meal_choices': meal_choices,
     }
     
     return render(request, 'mess_management/manage_attendance.html', context)
@@ -2748,7 +2867,7 @@ def mark_attendance(request):
     mess_membership = MessMembership.objects.filter(student=student, approved=True, is_active=True).first()
     if not mess_membership:
         messages.error(request, "You are not a mess member. Please apply for a mess membership first.")
-        return redirect('mess_apply')  # Redirect to the page where students can apply for mess membership
+        return redirect('mess_apply')
 
     # Proceed with marking attendance if the student is a mess member
     today = timezone.now().date()
@@ -2770,30 +2889,34 @@ def mark_attendance(request):
     
     # Process form submission
     if request.method == 'POST':
+        attendance_marked = False
         for meal_code in all_meal_codes:
             checkbox_name = f'is_present_{meal_code}'
             
             # Only process if this meal hasn't been marked yet
             if meal_code not in marked_meals and checkbox_name in request.POST:
-                # Get current meal price from menu (using filter() instead of get())
-                menu_item = MessMenu.objects.filter(meal_time=meal_code, date=today).first()  # Use .first() to get the first result
-                
-                if not menu_item:
-                    # Default price if no menu item exists
-                    price = 0
-                else:
-                    price = menu_item.price
-                
-                # Create attendance record
-                MessAttendance.objects.create(
-                    student=student,
-                    date=today,
-                    meal_time=meal_code,
-                    is_present=True,
-                    price_charged=price
-                )
-                
-        # Redirect to the same page to refresh the data
+                try:
+                    # Get current meal price from menu
+                    menu_item = MessMenu.objects.filter(meal_time=meal_code, date=today).first()
+                    
+                    price = menu_item.price if menu_item else 0
+                    
+                    # Create attendance record
+                    MessAttendance.objects.create(
+                        student=student,
+                        date=today,
+                        meal_time=meal_code,
+                        is_present=True,
+                        price_charged=price
+                    )
+                    attendance_marked = True
+                    
+                except Exception as e:
+                    messages.error(request, f"Error marking attendance for {meal_code}: {str(e)}")
+        
+        if attendance_marked:
+            messages.success(request, "Attendance marked successfully!")
+        
         return redirect('mess_attendance')
     
     # Calculate remaining meals to be marked
@@ -2836,6 +2959,7 @@ def mark_attendance(request):
     }
     
     return render(request, 'mess_management/mess_attendance.html', context)
+
 
 @login_required
 def mess_attendance(request):
@@ -2880,45 +3004,65 @@ def mess_attendance(request):
     
     # Process form submission
     if request.method == 'POST':
+        attendance_marked = False
         for meal_code in all_meal_codes:
             checkbox_name = f'is_present_{meal_code}'
             
             # Only process if this meal hasn't been marked yet
             if meal_code not in marked_meals and checkbox_name in request.POST:
-                # Get current meal price from menu
-                menu_item = MessMenu.objects.filter(meal_time=meal_code, date=today).first()
-                
-                if not menu_item:
-                    # Default price if no menu item exists
-                    price = 0
-                else:
-                    price = menu_item.price
-                
-                # Create attendance record
-                MessAttendance.objects.create(
-                    student=student,
-                    date=today,
-                    meal_time=meal_code,
-                    is_present=True,
-                    price_charged=price
-                )
-                
-        # Redirect to the same page to refresh the data
-        messages.success(request, "Attendance marked successfully!")
+                try:
+                    # Get current meal price from menu
+                    menu_item = MessMenu.objects.filter(meal_time=meal_code, date=today).first()
+                    
+                    price = menu_item.price if menu_item else 0
+                    
+                    # Create attendance record
+                    MessAttendance.objects.create(
+                        student=student,
+                        date=today,
+                        meal_time=meal_code,
+                        is_present=True,
+                        price_charged=price
+                    )
+                    attendance_marked = True
+                    
+                except Exception as e:
+                    messages.error(request, f"Error marking attendance: {str(e)}")
+        
+        if attendance_marked:
+            messages.success(request, "Attendance marked successfully!")
+            
         return redirect('mess_attendance')
     
     # Calculate remaining meals to be marked
     remaining_meals = all_meal_codes - marked_meals
     
-    # Get attendance for the last 30 days
+    # Get search parameters for attendance history
+    date_search = request.GET.get('date_search')
+    meal_search = request.GET.get('meal_search')
+    
+    # Get attendance for the last 30 days (or filtered)
     start_date = today - timezone.timedelta(days=30)
     
-    # Get all attendance records in the date range
-    attendance_records = MessAttendance.objects.filter(
+    # Build query for attendance records
+    attendance_query = MessAttendance.objects.filter(
         student=student,
         date__gte=start_date,
         date__lte=today
-    ).order_by('-date')
+    )
+    
+    # Apply search filters
+    if date_search:
+        try:
+            search_date = datetime.strptime(date_search, '%Y-%m-%d').date()
+            attendance_query = attendance_query.filter(date=search_date)
+        except ValueError:
+            messages.error(request, "Invalid date format for search.")
+    
+    if meal_search:
+        attendance_query = attendance_query.filter(meal_time=meal_search)
+    
+    attendance_records = attendance_query.order_by('-date')
     
     # Organize attendance by date for display
     attendance_by_date = {}
@@ -2939,60 +3083,175 @@ def mess_attendance(request):
     attendance_history = list(attendance_by_date.values())
     attendance_history.sort(key=lambda x: x['date'], reverse=True)
     
+    # Meal choices for search dropdown
+    meal_choices = [
+        ('', 'All Meals'),
+        ('BF', 'Breakfast'),
+        ('LN', 'Lunch'),
+        ('ET', 'Evening Tea'),
+        ('DN', 'Dinner')
+    ]
+    
     context = {
         'attendance_history': attendance_history,
         'meal_times': meal_times,
         'marked_meals': marked_meals,
         'remaining_meals': remaining_meals,
-        'mess_membership': mess_membership
+        'mess_membership': mess_membership,
+        'date_search': date_search,
+        'meal_search': meal_search,
+        'meal_choices': meal_choices,
     }
     
     return render(request, 'mess_management/mess_attendance.html', context)
 
+
 @staff_member_required
 def breakfast_attendance(request):
-    # Fetch attendance records for Breakfast only
-    breakfast_records = MessAttendance.objects.filter(meal_time='BF').order_by('-date')
+    # Get search parameters
+    date_search = request.GET.get('date')
+    student_search = request.GET.get('student', '').strip()
+    
+    # Base queryset for breakfast records
+    breakfast_query = MessAttendance.objects.filter(meal_time='BF')
+    
+    # Apply date filter
+    if date_search:
+        try:
+            search_date = datetime.strptime(date_search, '%Y-%m-%d').date()
+            breakfast_query = breakfast_query.filter(date=search_date)
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD format.")
+    
+    # Apply student search filter
+    if student_search:
+        breakfast_query = breakfast_query.filter(
+            Q(student__user__first_name__icontains=student_search) |
+            Q(student__user__last_name__icontains=student_search) |
+            Q(student__user__username__icontains=student_search) |
+            Q(student__student_id__icontains=student_search)
+        )
+    
+    breakfast_records = breakfast_query.order_by('-date', '-id')
 
     context = {
-        'breakfast_records': breakfast_records
+        'breakfast_records': breakfast_records,
+        'date_search': date_search,
+        'student_search': student_search,
     }
 
     return render(request, 'mess_management/breakfast_attendance.html', context)
 
+
 @staff_member_required
 def lunch_attendance(request):
-    # Fetch attendance records for Lunch only
-    lunch_records = MessAttendance.objects.filter(meal_time='LN').order_by('-date')
+    # Get search parameters
+    date_search = request.GET.get('date')
+    student_search = request.GET.get('student', '').strip()
+    
+    # Base queryset for lunch records
+    lunch_query = MessAttendance.objects.filter(meal_time='LN')
+    
+    # Apply date filter
+    if date_search:
+        try:
+            search_date = datetime.strptime(date_search, '%Y-%m-%d').date()
+            lunch_query = lunch_query.filter(date=search_date)
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD format.")
+    
+    # Apply student search filter
+    if student_search:
+        lunch_query = lunch_query.filter(
+            Q(student__user__first_name__icontains=student_search) |
+            Q(student__user__last_name__icontains=student_search) |
+            Q(student__user__username__icontains=student_search) |
+            Q(student__student_id__icontains=student_search)
+        )
+    
+    lunch_records = lunch_query.order_by('-date', '-id')
 
     context = {
-        'lunch_records': lunch_records
+        'lunch_records': lunch_records,
+        'date_search': date_search,
+        'student_search': student_search,
     }
 
     return render(request, 'mess_management/lunch_attendance.html', context)
 
+
 @staff_member_required
 def tea_break_attendance(request):
-    # Fetch attendance records for Tea Break only
-    tea_break_records = MessAttendance.objects.filter(meal_time='ET').order_by('-date')
+    # Get search parameters
+    date_search = request.GET.get('date')
+    student_search = request.GET.get('student', '').strip()
+    
+    # Base queryset for tea break records
+    tea_query = MessAttendance.objects.filter(meal_time='ET')
+    
+    # Apply date filter
+    if date_search:
+        try:
+            search_date = datetime.strptime(date_search, '%Y-%m-%d').date()
+            tea_query = tea_query.filter(date=search_date)
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD format.")
+    
+    # Apply student search filter
+    if student_search:
+        tea_query = tea_query.filter(
+            Q(student__user__first_name__icontains=student_search) |
+            Q(student__user__last_name__icontains=student_search) |
+            Q(student__user__username__icontains=student_search) |
+            Q(student__student_id__icontains=student_search)
+        )
+    
+    tea_break_records = tea_query.order_by('-date', '-id')
 
     context = {
-        'tea_break_records': tea_break_records
+        'tea_break_records': tea_break_records,
+        'date_search': date_search,
+        'student_search': student_search,
     }
 
     return render(request, 'mess_management/tea_break_attendance.html', context)
 
+
 @staff_member_required
 def dinner_attendance(request):
-    # Fetch attendance records for Dinner only
-    dinner_records = MessAttendance.objects.filter(meal_time='DN').order_by('-date')
+    # Get search parameters
+    date_search = request.GET.get('date')
+    student_search = request.GET.get('student', '').strip()
+    
+    # Base queryset for dinner records
+    dinner_query = MessAttendance.objects.filter(meal_time='DN')
+    
+    # Apply date filter
+    if date_search:
+        try:
+            search_date = datetime.strptime(date_search, '%Y-%m-%d').date()
+            dinner_query = dinner_query.filter(date=search_date)
+        except ValueError:
+            messages.error(request, "Invalid date format. Please use YYYY-MM-DD format.")
+    
+    # Apply student search filter
+    if student_search:
+        dinner_query = dinner_query.filter(
+            Q(student__user__first_name__icontains=student_search) |
+            Q(student__user__last_name__icontains=student_search) |
+            Q(student__user__username__icontains=student_search) |
+            Q(student__student_id__icontains=student_search)
+        )
+    
+    dinner_records = dinner_query.order_by('-date', '-id')
 
     context = {
-        'dinner_records': dinner_records
+        'dinner_records': dinner_records,
+        'date_search': date_search,
+        'student_search': student_search,
     }
 
     return render(request, 'mess_management/dinner_attendance.html', context)
-
 
 # ===========================
 # Mess Menu Management (Admin)
