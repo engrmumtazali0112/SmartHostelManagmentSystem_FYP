@@ -80,32 +80,143 @@ The **Smart Hostel Management System** is an innovative software solution design
 
 </div>
 
+# Smart Hostel Management System - Project Structure
+
 ```
 SmartHostelManagmentSystem_FYP/
-├── 📁 hostel/                          # Main Application
-│   ├── 📄 admin.py                     # Django Admin Configuration
-│   ├── 📄 apps.py                      # App Configuration
-│   ├── 📄 models.py                    # Database Models
-│   ├── 📄 views.py                     # Business Logic
-│   ├── 📄 urls.py                      # URL Routing
-│   ├── 📄 forms.py                     # Form Definitions
-│   ├── 📄 digitalpersona.py           # Biometric Integration
-│   ├── 📁 migrations/                  # Database Migrations
+├── 📁 hostel/                                    # Main Django Application
+│   ├── 📄 admin.py                               # Django Admin Configuration
+│   ├── 📄 apps.py                                # App Configuration
+│   ├── 📄 models.py                              # Database Models
+│   ├── 📄 views.py                               # Business Logic & Views
+│   ├── 📄 urls.py                                # URL Routing
+│   ├── 📄 forms.py                               # Form Definitions
+│   ├── 📄 digitalpersona.py                     # Biometric Integration
+│   │
+│   ├── 📁 migrations/                            # Database Migrations
 │   │   ├── 📄 0001_initial.py
 │   │   ├── 📄 0002_payment_due_date_...
-│   │   └── 📄 ... (97 migration files)
-│   └── 📁 templatetags/               # Custom Template Tags
-│       ├── 📄 custom_filters.py
-│       └── 📄 filters.py
-├── 📁 hostel_management_system/        # Project Settings
-│   ├── 📄 settings.py                  # Django Settings
-│   ├── 📄 urls.py                      # Main URL Configuration
-│   ├── 📄 wsgi.py                      # WSGI Configuration
-│   └── 📄 asgi.py                      # ASGI Configuration
-├── 📄 manage.py                        # Django Management
-└── 📄 requirements.txt                 # Dependencies
-```
+│   │   └── 📄 ... (97+ migration files)
+│   │
+│   ├── 📁 templatetags/                          # Custom Template Tags
+│   │   ├── 📄 custom_filters.py
+│   │   └── 📄 filters.py
+│   │
+│   └── 📁 templates/                             # HTML Templates
+│       ├── 📄 base.html                          # Base Template Layout
+│       ├── 📄 dashboard.html                     # Admin Dashboard
+│       ├── 📄 student_dashboard.html             # Student Dashboard
+│       ├── 📄 student_dues.html                  # Student Dues View
+│       │
+│       ├── 📁 hostel_management/                 # Hostel Management Templates
+│       │   ├── 📄 add_hostel.html
+│       │   ├── 📄 edit_hostel.html
+│       │   ├── 📄 list_hostels.html
+│       │   ├── 📄 manage_room_prices.html
+│       │   └── 📄 view_hostel_rooms.html
+│       │
+│       ├── 📁 room_management/                   # Room Management Templates
+│       │   ├── 📄 add_room.html
+│       │   ├── 📄 edit_room.html
+│       │   ├── 📄 list_rooms.html
+│       │   └── 📄 delete_room_confirmation.html
+│       │
+│       ├── 📁 student_management/                # Student Management Templates
+│       │   ├── 📄 add_student.html
+│       │   ├── 📄 edit_student.html
+│       │   ├── 📄 list_students.html
+│       │   ├── 📄 view_student.html
+│       │   └── 📄 delete_student_confirmation.html
+│       │
+│       ├── 📁 mess_management/                   # Mess Management Templates
+│       │   ├── 📄 add_mess_menu.html
+│       │   ├── 📄 admin_mess_management.html
+│       │   ├── 📄 mess_apply.html
+│       │   ├── 📄 mess_request.html
+│       │   ├── 📄 mess_status.html
+│       │   ├── 📄 mess_membership_status.html
+│       │   ├── 📄 view_mess_menu.html
+│       │   ├── 📄 student_mess_bills.html
+│       │   ├── 📄 inactive_memberships.html
+│       │   ├── 📄 rejected_applications.html
+│       │   ├── 📄 enroll_fingerprint.html
+│       │   ├── 📄 manage_attendance.html
+│       │   ├── 📄 mark_attendance.html
+│       │   ├── 📄 mess_attendance.html
+│       │   ├── 📄 breakfast_attendance.html
+│       │   ├── 📄 lunch_attendance.html
+│       │   ├── 📄 dinner_attendance.html
+│       │   └── 📄 tea_break_attendance.html
+│       │
+│       ├── 📁 mess_bill_payment/                 # Mess Payment Management
+│       │   ├── 📄 add_mess_payment.html
+│       │   ├── 📄 mess_bill.html
+│       │   ├── 📄 mess_account_book.html
+│       │   ├── 📄 admin_payment_requests.html
+│       │   ├── 📄 payment_request_form.html
+│       │   ├── 📄 payment_request_details.html
+│       │   ├── 📄 process_payment_request.html
+│       │   ├── 📄 payment_success.html
+│       │   ├── 📄 student_mess_payment_details.html
+│       │   ├── 📄 enroll_fingerprint.html
+│       │   ├── 📄 fingerprint_attendance.html
+│       │   └── 📄 fingerprint_status.html
+│       │
+│       ├── 📁 payment_management/                # Fee Payment Management
+│       │   ├── 📄 add_payment.html
+│       │   ├── 📄 account_book.html
+│       │   ├── 📄 admin_payment_requests.html
+│       │   ├── 📄 fee_management.html
+│       │   ├── 📄 view_student_fee.html
+│       │   └── 📄 success.html
+│       │
+│       ├── 📁 notice_complaint_management/       # Notice & Complaint System
+│       │   ├── 📄 add_notice.html
+│       │   ├── 📄 edit_notice.html
+│       │   ├── 📄 view_notice.html
+│       │   ├── 📄 view_notice_student.html
+│       │   ├── 📄 list_of_noticeboard.html
+│       │   ├── 📄 student_notices.html
+│       │   ├── 📄 delete_notice_confirmation.html
+│       │   ├── 📄 submit_complaint.html
+│       │   ├── 📄 list_complaints.html
+│       │   └── 📄 view_complaint.html
+│       │
+│       ├── 📁 student_showcaseNotice/            # Student Showcase System
+│       │   ├── 📄 create_showcase_notice.html
+│       │   ├── 📄 edit_showcase_notice.html
+│       │   ├── 📄 admin_showcase_notices.html
+│       │   ├── 📄 student_showcase_notices.html
+│       │   ├── 📄 showcase_notice_detail.html
+│       │   ├── 📄 view_showcase_notice.html
+│       │   ├── 📄 view_student_showcase_notice.html
+│       │   ├── 📄 resolved_showcase_notices.html
+│       │   └── 📄 delete_showcase_notice.html
+│       │
+│       ├── 📁 visitor_management/                # Visitor Management System
+│       │   ├── 📄 create_visitor_request.html
+│       │   ├── 📄 request_visitor.html
+│       │   ├── 📄 visitor_requests.html
+│       │   ├── 📄 update_visitor_request.html
+│       │   ├── 📄 admin_manage_visitor_requests.html
+│       │   └── 📄 all_std_request_history.html
+│       │
+│       └── 📁 user_auth/                         # User Authentication
+│           ├── 📄 login.html
+│           ├── 📄 register.html
+│           └── 📄 std_profile.html
+│
+├── 📁 hostel_management_system/                  # Django Project Settings
+│   ├── 📄 settings.py                            # Django Configuration
+│   ├── 📄 urls.py                                # Main URL Configuration
+│   ├── 📄 wsgi.py                                # WSGI Server Configuration
+│   └── 📄 asgi.py                                # ASGI Server Configuration
+│
+├── 📄 manage.py                                  # Django Management Script
+└── 📄 requirements.txt                           # Python Dependencies
 
+
+```
 ---
 
 ## 🛠️ **Technology Stack**
