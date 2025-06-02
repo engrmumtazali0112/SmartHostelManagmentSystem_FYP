@@ -25,7 +25,7 @@ The **Smart Hostel Management System** is an innovative software solution design
 
 <div align="center">
 
-### 🏛️ **Academic Information**
+### 🏛️ **Academic Information!**
 
 | 🎓 **University** | 👥 **Department** | 📅 **Academic Year** | 🎯 **Project Type** |
 |:---:|:---:|:---:|:---:|
