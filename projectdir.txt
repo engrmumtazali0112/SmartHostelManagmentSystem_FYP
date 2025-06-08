@@ -1,0 +1,43 @@
+===============================================
+  🏨 SMART HOSTEL MANAGEMENT SYSTEM
+  📁 Project Directory Structure
+===============================================
+
+📂 Project Root: D:\Internship\SmartHostelManagmentSystem_FYP\
+
+�� Directory Listing:
+├── 📂 .git                           [Git Repository Files]
+├── 📂 .idea                          [IDE Configuration]
+├── 📂 Demo                           [Demo Files & Examples]
+├── 📂 hostel                         [Main Django App]
+├── 📂 hostel_management_system       [Django Project Settings]
+├── 📂 media                          [User Uploaded Files]
+├── 📂 static                         [Static Assets CSS, JS, Images]
+├── 📂 staticfiles                    [Collected Static Files]
+└── 📂 Thesis                         [Documentation & Thesis Files]
+
+===============================================
+📊 PROJECT STATISTICS
+===============================================
+✅ Total Directories: 9 active directories
+📅 Last Scan: Fri 06/06/2025  8:59:33.53
+💾 Drive Space: 382 GB free
+🔧 Framework: Django Python Web Framework
+📝 Purpose: Smart Hostel Management System
+
+===============================================
+🗂️ DIRECTORY PURPOSES
+===============================================
+hostel/                    → Main application logic
+hostel_management_system/ → Django project settings
+static/                   → CSS, JavaScript, Images
+staticfiles/              → Production static files
+media/                    → User uploaded content
+Demo/                     → Example implementations
+Thesis/                   → Documentation files
+.git/                     → Version control data
+.idea/                    → IDE configuration
+
+===============================================
+Generated on: Fri 06/06/2025 at  8:59:33.74
+===============================================

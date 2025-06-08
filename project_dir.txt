@@ -1,0 +1,18 @@
+ Volume in drive D is New Volume
+ Volume Serial Number is 84D2-6D34
+
+ Directory of D:\Internship\SmartHostelManagmentSystem_FYP
+
+06/06/2025  08:57 AM    <DIR>          .
+06/06/2025  08:57 AM    <DIR>          ..
+06/04/2025  10:17 AM    <DIR>          .git
+05/27/2025  10:53 AM    <DIR>          .idea
+05/27/2025  10:53 AM    <DIR>          Demo
+05/27/2025  10:53 AM    <DIR>          hostel
+05/27/2025  10:53 AM    <DIR>          hostel_management_system
+05/27/2025  10:53 AM    <DIR>          media
+05/27/2025  10:53 AM    <DIR>          static
+05/27/2025  10:53 AM    <DIR>          staticfiles
+06/06/2025  08:07 AM    <DIR>          Thesis
+               0 File(s)              0 bytes
+              11 Dir(s)  382,802,059,264 bytes free
