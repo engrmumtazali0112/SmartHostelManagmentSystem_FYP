@@ -2475,6 +2475,24 @@ def mess_status(request):
         messages.warning(request, "You have not applied for mess yet. Please apply first.")
         return redirect('apply_for_mess')
 
+from django.shortcuts import render, redirect
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views.decorators.http import require_http_methods
+from datetime import datetime, date
+from django.utils import timezone
+from django.db.models import Q
+import base64
+import json
+import requests
+from .models import MessMembership, Fingerprint
+
+# Flask service URL
+FLASK_SERVICE_URL = "http://127.0.0.1:5000"
+
 @login_required
 def apply_for_mess(request):
     # Check for existing ACTIVE membership only
@@ -2626,6 +2644,172 @@ def apply_for_mess(request):
         'fingerprint_enrolled': fingerprint_enrolled
     })
 
+
+@login_required
+@require_http_methods(["GET"])
+def check_flask_service_status(request):
+    """Check if Flask fingerprint service is running"""
+    try:
+        response = requests.get(f"{FLASK_SERVICE_URL}/status", timeout=5)
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse({
+                'success': True,
+                'status': data.get('status', 'unknown'),
+                'message': data.get('message', 'Service is running'),
+                'sdk_available': data.get('sdk_available', False)
+            })
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Service not responding correctly'
+            })
+    except requests.exceptions.RequestException:
+        return JsonResponse({
+            'success': False,
+            'message': 'Flask service is not running. Please start the fingerprint service.'
+        })
+
+@login_required
+@require_http_methods(["POST"])
+def capture_fingerprint_api(request):
+    """API endpoint to capture fingerprint via Flask service"""
+    try:
+        # Make request to Flask service
+        response = requests.get(f"{FLASK_SERVICE_URL}/capture", timeout=40)
+        
+        if response.status_code == 200:
+            data = response.json()
+            return JsonResponse(data)
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Failed to communicate with fingerprint service'
+            })
+            
+    except requests.exceptions.Timeout:
+        return JsonResponse({
+            'success': False,
+            'message': 'Fingerprint capture timed out. Please try again.'
+        })
+    except requests.exceptions.RequestException as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Error connecting to fingerprint service: {str(e)}'
+        })
+
+@login_required
+@csrf_exempt
+@require_http_methods(["POST"])
+def verify_fingerprint_api(request):
+    """API endpoint to verify fingerprint"""
+    try:
+        # Get the stored fingerprint template for the user
+        try:
+            fingerprint_record = Fingerprint.objects.get(student=request.user.student)
+            stored_template = base64.b64encode(fingerprint_record.fingerprint_template).decode('utf-8')
+        except Fingerprint.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'No stored fingerprint found for verification'
+            })
+
+        # Get captured template from request
+        data = json.loads(request.body)
+        captured_template = data.get('captured_template')
+        
+        if not captured_template:
+            return JsonResponse({
+                'success': False,
+                'message': 'No captured fingerprint template provided'
+            })
+
+        # Send verification request to Flask service
+        verification_data = {
+            'stored_template': stored_template,
+            'captured_template': captured_template
+        }
+        
+        response = requests.post(
+            f"{FLASK_SERVICE_URL}/verify", 
+            json=verification_data,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return JsonResponse(response.json())
+        else:
+            return JsonResponse({
+                'success': False,
+                'message': 'Failed to verify fingerprint'
+            })
+            
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'message': f'Verification error: {str(e)}'
+        })
+
+@login_required
+def enroll_fingerprint(request):
+    """Standalone fingerprint enrollment page"""
+    try:
+        fingerprint = Fingerprint.objects.get(student=request.user.student)
+        fingerprint_enrolled = True
+    except Fingerprint.DoesNotExist:
+        fingerprint_enrolled = False
+
+    if request.method == 'POST':
+        fingerprint_data = request.POST.get('fingerprint_data')
+        
+        if fingerprint_data:
+            try:
+                # Convert fingerprint data to binary format
+                if isinstance(fingerprint_data, str):
+                    try:
+                        fingerprint_bytes = base64.b64decode(fingerprint_data)
+                    except:
+                        fingerprint_bytes = fingerprint_data.encode('utf-8')
+                else:
+                    fingerprint_bytes = fingerprint_data
+
+                # Create or update fingerprint record
+                fingerprint, created = Fingerprint.objects.update_or_create(
+                    student=request.user.student,
+                    defaults={'fingerprint_template': fingerprint_bytes}
+                )
+
+                if created:
+                    messages.success(request, "Fingerprint enrolled successfully!")
+                else:
+                    messages.success(request, "Fingerprint updated successfully!")
+                
+                return redirect('mess_status')  # or wherever you want to redirect
+                
+            except Exception as e:
+                messages.error(request, f"Error enrolling fingerprint: {str(e)}")
+        else:
+            messages.error(request, "Fingerprint data is required.")
+
+    return render(request, 'mess_management/enroll_fingerprint.html', {
+        'fingerprint_enrolled': fingerprint_enrolled
+    })
+
+# Add these URL patterns to your urls.py:
+"""
+# In your urls.py, add these patterns:
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    # ... your existing patterns ...
+    path('check-service-status/', views.check_flask_service_status, name='check_flask_service_status'),
+    path('api/capture-fingerprint/', views.capture_fingerprint_api, name='capture_fingerprint_api'),
+    path('api/verify-fingerprint/', views.verify_fingerprint_api, name='verify_fingerprint_api'),
+    path('enroll-fingerprint/', views.enroll_fingerprint, name='enroll_fingerprint'),
+]
+"""
 # Admin views remain the same but with improved error handling
 @staff_member_required
 def admin_mess_management(request):
