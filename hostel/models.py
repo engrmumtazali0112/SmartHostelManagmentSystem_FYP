@@ -895,6 +895,8 @@ class MessFee(models.Model):
     @property
     def remaining_due(self):
         return self.total_cost - self.paid_amount
+
+
 # ==========================
 # Mess Payment System Model
 # Mess Bill
