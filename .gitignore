@@ -6,4 +6,7 @@ AppData/
 *.
 *.cache
 node_modules/
-.env
+.env"# PowerPoint temporary files" 
+"~$*.pptx" 
+"~$*.docx" 
+"~$*.xlsx" 
